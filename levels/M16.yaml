@@ -1,0 +1,35 @@
+title: Spring cleaning
+difficulty: medium
+daily-date: 2026-10-09
+concepts: [branch -d]
+
+brief: |
+  After the sprint, the repo is littered with branches. `feature-a` and `feature-b` have been merged into
+  `main`; `feature-c` hasn't, and its work exists nowhere else.
+
+  Delete the merged branches, and keep `feature-c`.
+
+  Tip: `git branch -d` only deletes branches that are fully merged, so it's the safe choice.
+
+setup:
+  - git commit -m "Initial app"
+  - git switch -c feature-a
+  - git commit -m "Add avatars"
+  - git switch main
+  - git merge feature-a
+  - git switch -c feature-b
+  - git commit -m "Add dark mode"
+  - git switch main
+  - git merge --no-ff feature-b
+  - git switch -c feature-c
+  - git commit -m "Half-done search"
+  - git switch main
+
+solution:
+  - git branch -d feature-a
+  - git branch -d feature-b
+
+goal:
+  - absent: feature-a
+  - absent: feature-b
+  - unchanged: feature-c

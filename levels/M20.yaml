@@ -1,0 +1,29 @@
+title: Merge the release back
+difficulty: medium
+daily-date: 2026-10-17
+concepts: [merge, branch -d]
+
+brief: |
+  Nikita's crash fix (C2) shipped on `release/1.4` via the `hotfix` branch, but it never made
+  it back to `main`.
+
+  Merge `release/1.4` into `main`, then tidy up by deleting `hotfix`, which will be fully merged.
+
+setup:
+  - git commit -m "Release 1.4"
+  - git branch release/1.4
+  - git switch -c hotfix
+  - git commit -m "Fix crash on save"
+  - git switch release/1.4
+  - git merge hotfix
+  - git switch main
+  - git commit -m "New onboarding"
+
+solution:
+  - git merge release/1.4
+  - git branch -d hotfix
+
+goal:
+  - merged: { from: C2, into: main }
+  - on-top-of: { ref: main, base: C3 }
+  - absent: hotfix

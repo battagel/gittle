@@ -1,0 +1,36 @@
+title: The branch is gone
+difficulty: pro
+daily-date: 2026-10-18
+concepts: [cherry-pick A..B, merge parents]
+
+brief: |
+  Dan's performance work was merged into `main` (C7) and the `perf` branch was deleted.
+
+  Now Matt wants those same improvements on `release/4.x` too, but nothing else from `main`.
+  Bring exactly what that merge brought in onto `release/4.x`.
+
+setup:
+  - git commit -m "Release 4.0"
+  - git branch release/4.x
+  - git commit -m "New pricing"
+  - git switch -c perf
+  - git commit -m "Cache user lookups"
+  - git commit -m "Batch DB writes"
+  - git commit -m "Lazy-load images"
+  - git switch main
+  - git commit -m "Pricing copy"
+  - git merge perf
+  - git branch -D perf
+  - git commit -m "Pricing FAQ"
+
+solution:
+  - git switch release/4.x
+  - git cherry-pick C3
+  - git cherry-pick C4
+  - git cherry-pick C5
+
+goal:
+  - applied: { ref: release/4.x, changes: [C3, C4, C5] }
+  - excludes: { ref: release/4.x, changes: [C2, C6, C8] }
+  - on-top-of: { ref: release/4.x, base: C1 }
+  - unchanged: main

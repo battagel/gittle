@@ -1,0 +1,27 @@
+title: Ship it straight
+difficulty: medium
+daily-date: 2026-10-13
+concepts: [cherry-pick A..B]
+
+brief: |
+  Matt wants Dan's `feature` (C2, C3) on `main` today. The team keeps `main` linear:
+  no merge commits, and `main`'s existing history must stay exactly as it is.
+
+  Tip: `git cherry-pick A..B` copies every commit after A, up to B.
+
+setup:
+  - git commit -m "Initial app"
+  - git switch -c feature
+  - git commit -m "Add export button"
+  - git commit -m "Export to CSV"
+  - git switch main
+  - git commit -m "Fix footer"
+
+solution:
+  - git cherry-pick C2
+  - git cherry-pick C3
+
+goal:
+  - applied: { ref: main, changes: [C2, C3] }
+  - linear: main
+  - on-top-of: { ref: main, base: C4 }

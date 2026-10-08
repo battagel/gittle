@@ -1,0 +1,26 @@
+title: Find the release
+difficulty: medium
+daily-date: 2026-10-15
+concepts: [tag, log]
+
+brief: |
+  Matt just noticed nobody tagged the 3.0 release, and support needs a branch for 3.x fixes.
+
+  Find the commit called "Release 3.0" (try `git log --oneline`), tag it `v3.0`, and create a branch
+  `support/3.x` at the same commit.
+
+setup:
+  - git commit -m "Add login"
+  - git commit -m "Add profile"
+  - git commit -m "Release 3.0"
+  - git commit -m "Start dark mode"
+  - git commit -m "Fix typo"
+  - git commit -m "Dark mode toggle"
+
+solution:
+  - git tag v3.0 C3
+  - git branch support/3.x C3
+
+goal:
+  - points-to: { tag: v3.0, commit: C3 }
+  - points-to: { branch: support/3.x, commit: C3 }

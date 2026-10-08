@@ -1,0 +1,35 @@
+title: The revert came along
+difficulty: pro
+daily-date: 2026-10-23
+concepts: [revert, merge, release branches]
+
+brief: |
+  Nikita reverted two commits on `release/3.1`: the new checkout (C2), because it isn't ready for 3.1,
+  and the analytics SDK (C3), because it leaks personal data.
+  To get the tax fix (C6) onto `main`, Dan merged `release/3.1` back in (C8), and now the new checkout
+  has vanished from `main` as well.
+
+  `main` is shared. Matt wants the new checkout working on `main` again, with the tax fix kept
+  and the analytics SDK still gone. `release/3.1` must stay as it is.
+
+setup:
+  - git commit -m "Initial app"
+  - git commit -m "New checkout"
+  - git commit -m "Analytics SDK"
+  - git branch release/3.1
+  - git switch release/3.1
+  - git revert C2
+  - git revert C3
+  - git commit -m "Fix tax rounding"
+  - git switch main
+  - git commit -m "Checkout polish"
+  - git merge release/3.1
+
+solution:
+  - git revert C4
+
+goal:
+  - applied: { ref: main, changes: [C0, C1, C2, C6, C7] }
+  - not-applied: { ref: main, changes: [C3] }
+  - on-top-of: { ref: main, base: C8 }
+  - unchanged: release/3.1

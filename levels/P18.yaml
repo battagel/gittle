@@ -1,0 +1,33 @@
+title: Backwards merge
+difficulty: pro
+daily-date: 2026-10-21
+concepts: [revert -m, merge parents]
+
+brief: |
+  Dan meant to try the new DB driver on `search`, but ran `git merge search` while on `experiment` (C5).
+  Thinking that was `search`, Dan kept working there (C6) and then merged `experiment` into `main` (C8).
+
+  `main` is shared. Matt wants the DB driver (C3, C4) undone on `main` with *a single* new commit,
+  keeping search (C2, C6) and everything else. Find the right merge to undo, and the right side of it.
+
+setup:
+  - git commit -m "Initial app"
+  - git switch -c search
+  - git commit -m "Add search"
+  - git switch main
+  - git switch -c experiment
+  - git commit -m "Try new DB driver"
+  - git commit -m "Tune DB driver"
+  - git merge search
+  - git commit -m "Search filters"
+  - git switch main
+  - git commit -m "Fix footer"
+  - git merge experiment
+
+solution:
+  - git revert -m 2 C5
+
+goal:
+  - not-applied: { ref: main, changes: [C3, C4] }
+  - applied: { ref: main, changes: [C1, C2, C6, C7] }
+  - ahead: { ref: main, of: C8, by: 1 }

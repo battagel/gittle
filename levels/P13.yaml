@@ -1,0 +1,31 @@
+title: Doubled up
+difficulty: pro
+daily-date: 2026-10-12
+concepts: [rebase, merge parents, reset]
+
+brief: |
+  Dan rebased `feature` onto `main` (C2', C3'), then ran a pull that merged the old, un-rebased commits
+  straight back in (C5). Now `feature` has every change twice. Nobody else has `feature` yet.
+
+  Get `feature` back to one straight line of Dan's work on top of `main`, with each change once.
+
+setup:
+  - git commit -m "Initial app"
+  - git switch -c feature
+  - git commit -m "Add search"
+  - git commit -m "Search filters"
+  - git switch main
+  - git commit -m "Security patch"
+  - git switch feature
+  - git rebase main
+  - git merge -m "Merge branch 'feature' of origin" C3
+
+solution:
+  - git reset --hard HEAD~1
+
+goal:
+  - on-top-of: { ref: feature, base: C4 }
+  - contains: { ref: feature, changes: [C2, C3] }
+  - no-duplicates: feature
+  - linear: feature
+  - unchanged: main

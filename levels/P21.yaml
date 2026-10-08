@@ -1,0 +1,36 @@
+title: Hotfix from develop
+difficulty: pro
+daily-date: 2026-10-24
+concepts: [revert -m, cherry-pick]
+
+brief: |
+  Dan branched `hotfix` from `develop` instead of `main`, fixed the login crash (C6) and merged it into
+  `main` (C8). The merge also dragged all of `develop`'s unreleased reporting work into production.
+
+  `main` is shared, so its history can't be rewritten. Matt wants the reporting work out of `main`
+  but the login fix kept. `develop` must stay as it is.
+
+setup:
+  - git commit -m "Release 1.0"
+  - git switch -c develop
+  - git commit -m "Reporting v2"
+  - git switch -c charts
+  - git commit -m "Reporting charts"
+  - git switch develop
+  - git commit -m "Reporting exports"
+  - git merge charts
+  - git switch -c hotfix
+  - git commit -m "Fix login crash"
+  - git switch main
+  - git commit -m "Update support email"
+  - git merge hotfix
+
+solution:
+  - git revert -m 1 C8
+  - git cherry-pick C6
+
+goal:
+  - not-applied: { ref: main, changes: [C2, C3, C4] }
+  - applied: { ref: main, changes: [C0, C1, C6, C7] }
+  - on-top-of: { ref: main, base: C8 }
+  - unchanged: develop

@@ -1,0 +1,36 @@
+title: Half cherry-picked
+difficulty: pro
+daily-date: 2026-10-20
+concepts: [rebase, cherry-pick, duplicates]
+
+brief: |
+  Two of Dan's fixes on `feature` (C3, C5) were cherry-picked into `main` early (C3', C5').
+  Now Matt has approved the whole branch.
+
+  Get all of `feature` into `main` and leave both branches pointing at the same commit. The team keeps `main`
+  linear, never rewrites it, and doesn't want any change in it twice.
+
+setup:
+  - git commit -m "Initial app"
+  - git switch -c feature
+  - git commit -m "Add export"
+  - git commit -m "Fix export crash"
+  - git commit -m "Export to PDF"
+  - git commit -m "Fix PDF margins"
+  - git switch main
+  - git cherry-pick C3
+  - git cherry-pick C5
+  - git commit -m "Update README"
+
+solution:
+  - git switch feature
+  - git rebase main
+  - git switch main
+  - git merge feature
+
+goal:
+  - applied: { ref: main, changes: [C2, C3, C4, C5, C6] }
+  - no-duplicates: main
+  - linear: main
+  - on-top-of: { ref: main, base: C6 }
+  - same: [main, feature]

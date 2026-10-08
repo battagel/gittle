@@ -1,0 +1,40 @@
+title: Rebased main
+difficulty: pro
+daily-date: 2026-10-25
+origin: true
+concepts: [force push, push --force-with-lease, merge, rewriting shared history]
+
+brief: |
+  Dan wanted `cart` in `main`, so rebased `main` onto `cart` and force-pushed, then pushed a follow-up fix
+  on top (C6). Everyone else's `main`, including yours, still ends at the original C5, and now nobody
+  can pull cleanly.
+
+  Matt wants `main` on origin back on the history everyone has (C4 and C5 themselves, not copies), with `cart`
+  (C2, C3) brought in by a merge, Dan's fix (C6) kept, and no copies left in there.
+
+setup:
+  - git commit -m "Initial app"
+  - git push
+  - git switch -c cart
+  - git commit -m "Add cart"
+  - git commit -m "Cart totals"
+  - git push -u origin cart
+  - git switch main
+  - git commit -m "Add login"
+  - git commit -m "Login rate limit"
+  - git push
+  - server: rebase main onto cart
+  - server: commit main -m "Fix login copy"
+
+solution:
+  - git fetch
+  - git merge cart
+  - git cherry-pick C6
+  - git push --force-with-lease
+
+goal:
+  - merged: { from: C5, into: origin:main }
+  - merged: { from: C3, into: origin:main }
+  - applied: { ref: origin:main, changes: [C6] }
+  - no-duplicates: origin:main
+  - in-sync: main

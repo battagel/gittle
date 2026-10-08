@@ -1,0 +1,35 @@
+title: No merge commit
+difficulty: pro
+daily-date: 2026-10-22
+concepts: [revert, fast-forward, revert A..B]
+
+brief: |
+  Dan ran `git merge feature` on `release/2.x`, meaning to merge it into `main`. It fast-forwarded,
+  so team plans (C2, C3, C4) are now on the release branch with no merge commit to revert,
+  and Nikita has already added an invoice fix on top (C5).
+
+  `release/2.x` is shared. Matt wants team plans undone there without rewriting history, keeping
+  Nikita's fix. Leave `feature` alone: it ships in 3.0.
+
+setup:
+  - git commit -m "Release 2.0"
+  - git branch release/2.x
+  - git switch -c feature
+  - git commit -m "Add team plans"
+  - git commit -m "Team billing"
+  - git commit -m "Team invites"
+  - git switch release/2.x
+  - git merge feature
+  - git commit -m "Fix invoice PDF"
+
+solution:
+  - git revert C4
+  - git revert C3
+  - git revert C2
+
+goal:
+  - not-applied: { ref: release/2.x, changes: [C2, C3, C4] }
+  - applied: { ref: release/2.x, changes: [C0, C1, C5] }
+  - unchanged: main
+  - on-top-of: { ref: release/2.x, base: C5 }
+  - unchanged: feature

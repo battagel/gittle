@@ -1,0 +1,36 @@
+title: Wrong release
+difficulty: pro
+daily-date: 2026-10-10
+concepts: [revert -m, merge]
+
+brief: |
+  Dan merged `feature` (team billing, meant for 6.0) into `release/5.0` (C5) instead of `main`,
+  and Nikita has since added release notes on top of it (C6).
+
+  The release branch is shared, so Matt wants the merge undone there with a new commit,
+  keeping Nikita's notes, and `feature` merged into `main`, where it belongs.
+
+setup:
+  - git commit -m "Release 5.0"
+  - git branch release/5.0
+  - git commit -m "Start 6.0 work"
+  - git switch -c feature
+  - git commit -m "Add team billing"
+  - git commit -m "Billing emails"
+  - git switch release/5.0
+  - git merge --no-ff feature
+  - git commit -m "Fix release notes"
+
+solution:
+  - git revert -m 1 C5
+  - git switch main
+  - git merge feature
+
+goal:
+  - not-applied: { ref: release/5.0, changes: [C2, C3, C4] }
+  - applied: { ref: release/5.0, changes: [C0, C1, C6] }
+  - ahead: { ref: release/5.0, of: C6, by: 1 }
+  - merged: { from: C4, into: main }
+  - applied: { ref: main, changes: [C2, C3, C4] }
+  - excludes: { ref: main, changes: [C6] }
+  - on-top-of: { ref: main, base: C2 }

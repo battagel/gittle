@@ -1,0 +1,32 @@
+title: Both release lines
+difficulty: pro
+daily-date: 2026-10-14
+concepts: [cherry-pick, release branches]
+
+brief: |
+  Dan's old query code has a SQL injection bug, and it's in every release.
+  Nikita has fixed it on `main` (C4).
+
+  Matt wants the fix on both `release/1.x` and `release/2.x`, without bringing anything else from `main`.
+
+setup:
+  - git commit -m "Release 1.0"
+  - git branch release/1.x
+  - git commit -m "Release 2.0"
+  - git branch release/2.x
+  - git commit -m "New API"
+  - git commit -m "Fix SQL injection"
+
+solution:
+  - git switch release/1.x
+  - git cherry-pick C4
+  - git switch release/2.x
+  - git cherry-pick C4
+
+goal:
+  - applied: { ref: release/1.x, changes: [C4] }
+  - excludes: { ref: release/1.x, changes: [C2, C3] }
+  - on-top-of: { ref: release/1.x, base: C1 }
+  - applied: { ref: release/2.x, changes: [C4] }
+  - excludes: { ref: release/2.x, changes: [C3] }
+  - on-top-of: { ref: release/2.x, base: C2 }

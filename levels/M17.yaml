@@ -1,0 +1,28 @@
+title: Saved from detached HEAD
+difficulty: medium
+daily-date: 2026-10-11
+concepts: [detached HEAD, switch -c]
+
+brief: |
+  Nikita checked out `v1.0` to investigate a bug report, and made two useful commits (C4, C5)
+  in *detached HEAD* state.
+
+  Keep them safe on a branch called `investigation`, then go back to `main`.
+
+setup:
+  - git commit -m "Release 1.0"
+  - git tag v1.0
+  - git commit -m "New settings page"
+  - git commit -m "Settings tests"
+  - git checkout v1.0
+  - git commit -m "Reproduce login bug"
+  - git commit -m "Log auth errors"
+
+solution:
+  - git branch investigation
+  - git switch main
+
+goal:
+  - points-to: { branch: investigation, commit: C5 }
+  - head: main
+  - unchanged: main

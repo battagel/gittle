@@ -1,0 +1,27 @@
+title: Fix on the wrong branch
+difficulty: medium
+daily-date: 2026-10-19
+concepts: [cherry-pick, branch -f]
+
+brief: |
+  Dan committed a fix for the 2.1 release (C3) straight onto `main`, on top of unreleased work.
+  `main` hasn't been shared yet.
+
+  Put the fix on `release/2.1` (and only the fix), and take it back off `main` so `main` ends at C2 again.
+
+setup:
+  - git commit -m "Release 2.1"
+  - git branch release/2.1
+  - git commit -m "Start new search"
+  - git commit -m "Fix rounding in totals"
+
+solution:
+  - git reset --hard C2
+  - git switch release/2.1
+  - git cherry-pick C3
+
+goal:
+  - applied: { ref: release/2.1, changes: [C3] }
+  - excludes: { ref: release/2.1, changes: [C2] }
+  - on-top-of: { ref: release/2.1, base: C1 }
+  - points-to: { branch: main, commit: C2 }

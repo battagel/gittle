@@ -1,0 +1,31 @@
+title: Lost in the reset
+difficulty: pro
+daily-date: 2026-10-16
+origin: true
+concepts: [force push, pull, merge]
+
+brief: |
+  Dan ran `git reset --hard` on `main` to undo a local mistake, then *force-pushed*. That wiped three of
+  Nikita's commits (C2, C3, C4) off origin, and Dan has pushed C5 on top since.
+
+  Your laptop still has them, and so does everyone who pulled earlier. Matt wants them back on origin as they are
+  (the same commits, not copies), keeping Dan's C5, without force-pushing over anyone.
+
+setup:
+  - git commit -m "Initial app"
+  - git push
+  - git commit -m "Add search"
+  - git commit -m "Search filters"
+  - git commit -m "Search history"
+  - git push
+  - server: force main C1
+  - server: commit main -m "Tweak colours"
+
+solution:
+  - git pull --no-rebase
+  - git push
+
+goal:
+  - merged: { from: C4, into: origin:main }
+  - on-top-of: { ref: origin:main, base: C5 }
+  - in-sync: main
