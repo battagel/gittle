@@ -20,7 +20,8 @@ export function bisect(ctx: Ctx, args: string[]) {
       if (positional[0]) s.bisect.bad = resolve(s, positional[0], ctx.opts)
       for (const g of positional.slice(1)) s.bisect.good.push(resolve(s, g, ctx.opts))
       ctx.info('status: waiting for both good and bad commits')
-      return next(ctx)
+      next(ctx)
+      return resetHint(ctx)
     }
     case 'bad':
     case 'new':
@@ -34,7 +35,8 @@ export function bisect(ctx: Ctx, args: string[]) {
         else if (sub === 'skip') b.skipped.push(sha)
         else b.good.push(sha)
       }
-      return next(ctx)
+      next(ctx)
+      return resetHint(ctx)
     }
     case 'run': {
       const b = active(ctx)
@@ -48,7 +50,7 @@ export function bisect(ctx: Ctx, args: string[]) {
         next(ctx)
       }
       ctx.info('bisect found first bad commit')
-      return
+      return resetHint(ctx)
     }
     case 'reset': {
       const b = active(ctx)
@@ -66,6 +68,14 @@ export function bisect(ctx: Ctx, args: string[]) {
     default:
       fail(`git bisect: unknown subcommand '${sub ?? ''}'`, 'start, bad, good, skip, run npm test, reset')
   }
+}
+
+/** Once bisect names the culprit, HEAD is still on a commit it checked out: say how to get back. */
+function resetHint(ctx: Ctx) {
+  const b = ctx.state.bisect!
+  if (!ctx.state.bisected) return
+  const back = b.original.type === 'branch' ? `\`${b.original.name}\`` : 'where you started'
+  ctx.hint(`You're still on a commit bisect checked out: \`git bisect reset\` takes you back to ${back}`)
 }
 
 function active(ctx: Ctx) {

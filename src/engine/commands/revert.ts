@@ -9,9 +9,11 @@ export function revert(ctx: Ctx, args: string[]) {
     flags: { '--no-edit': 'no-edit' },
     options: { '-m': 'mainline', '--mainline': 'mainline' },
   })
-  if (!positional.length) fail('fatal: no commit given', 'Try: git revert <sha>')
   const mainline = options.mainline === undefined ? null : Number(options.mainline)
-  if (mainline !== null && !(mainline >= 1)) fail(`error: option \`mainline' expects a number greater than zero`)
+  if (mainline !== null && !(mainline >= 1)) {
+    fail(`error: option \`mainline' expects a number greater than zero`, '-m takes the parent to keep: git revert -m 1 <merge>')
+  }
+  if (!positional.length) fail('fatal: no commit given', 'Try: git revert <sha>')
 
   const s = ctx.state
   // Ranges are reverted newest first, like git.

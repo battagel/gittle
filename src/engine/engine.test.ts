@@ -597,6 +597,19 @@ describe('bisect', () => {
     expect(run(step(s, 'git checkout HEAD~6'), 'npm test').output.some((o) => o.kind === 'error')).toBe(false)
   })
 
+  it('once the culprit is named, the last line says how to get back', () => {
+    const s = step(step(bugged(), 'git bisect start'), 'git bisect bad')
+    const out = run(step(s, `git bisect good ${resolve(s, 'C0', { labels: true })}`), 'git bisect run npm test').output
+    expect(out[out.length - 1]).toMatchObject({ kind: 'hint', text: expect.stringContaining('git bisect reset') })
+  })
+
+  it('revert -m without a parent number says what -m takes', () => {
+    const s = play('git commit', 'git switch -c f', 'git commit', 'git switch main', 'git commit', 'git merge f')
+    const out = run(s, `git revert -m ${resolve(s, 'HEAD')}`).output
+    expect(out[0].text).toMatch(/mainline' expects a number/)
+    expect(out[1].text).toMatch(/git revert -m 1 <merge>/)
+  })
+
   it('a manual bisect halves the range each time and names the first bad commit', () => {
     let s = step(step(bugged(), 'git bisect start'), 'git bisect bad')
     s = step(s, `git bisect good ${resolve(s, 'C0', { labels: true })}`)
