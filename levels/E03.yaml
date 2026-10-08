@@ -1,0 +1,24 @@
+title: Where am I?
+difficulty: easy
+daily-date: null
+concepts: [HEAD, switch]
+
+brief: |
+  Next morning you open the project and find yourself on `main`, while yesterday's work
+  is on `feature`. `HEAD` shows where you are, and new commits always go wherever `HEAD` is.
+
+  Add another commit to `feature`.
+
+setup:
+  - git commit
+  - git switch -c feature
+  - git commit
+  - git switch main
+
+solution:
+  - git switch feature
+  - git commit
+
+goal:
+  - head: feature
+  - ahead: { ref: feature, of: C2 }

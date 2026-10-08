@@ -1,0 +1,23 @@
+title: Fast forward
+difficulty: easy
+daily-date: null
+concepts: [merge, fast-forward]
+
+brief: |
+  Matt has reviewed `feature` and approved it. `main` hasn't moved since you branched off,
+  so there's nothing to combine: `main` can simply slide forward.
+
+  Bring `main` up to date with `feature`, without a merge commit.
+
+setup:
+  - git commit
+  - git switch -c feature
+  - git commit
+  - git commit
+  - git switch main
+
+solution:
+  - git merge feature
+
+goal:
+  - points-to: { branch: main, commit: C3 }

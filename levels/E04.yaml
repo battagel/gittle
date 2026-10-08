@@ -1,0 +1,28 @@
+title: Back and forth
+difficulty: easy
+daily-date: null
+concepts: [switch, switch -]
+
+brief: |
+  You're deep in `feature` when Nikita spots a typo on `main` and asks for a quick fix.
+
+  Switch to `main`, commit the fix, then jump back to `feature` to carry on.
+
+  Tip: `git switch -` takes you back to the branch you were on before, like `cd -` in a shell.
+
+setup:
+  - git commit
+  - git switch -c feature
+  - git commit -m "Start search page"
+  - git commit -m "Show search results"
+
+solution:
+  - git switch main
+  - git commit -m "Quick fix"
+  - git switch -
+
+goal:
+  - ahead: { ref: main, of: C1, by: 1 }
+  - excludes: { ref: main, changes: [C2, C3] }
+  - contains: { ref: feature, changes: [C2, C3] }
+  - head: feature

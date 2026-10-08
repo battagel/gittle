@@ -1,0 +1,18 @@
+title: Your first commit
+difficulty: easy
+daily-date: null
+concepts: [commit]
+
+brief: |
+  Welcome to the team! Matt has given you access to the project. Everything lives in a
+  *repository*, and `main` is a label pointing at its latest commit.
+
+  Your first task: make a commit, and watch what happens to `main`.
+
+setup: []
+
+solution:
+  - git commit
+
+goal:
+  - ahead: { ref: main, of: C0 }

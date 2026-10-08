@@ -1,0 +1,26 @@
+title: Share your work
+difficulty: easy
+daily-date: null
+origin: true
+concepts: [push, upstream]
+
+brief: |
+  Until you *push*, your work only exists on your laptop. The team's shared copy of the repository is
+  called `origin`, and `origin/main` shows where `main` was on origin the last time you looked.
+
+  Your `feature` is ready for Matt to review. Push it to origin, and make it *track* `origin/feature`
+  so that next time a plain `git push` is enough.
+
+setup:
+  - git commit -m "Set up project"
+  - git push
+  - git branch feature
+  - git switch feature
+  - git commit -m "Add search box"
+
+solution:
+  - git push -u origin feature
+
+goal:
+  - pushed: feature
+  - tracks: { branch: feature, upstream: feature }

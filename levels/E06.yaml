@@ -1,0 +1,23 @@
+title: Mark the release
+difficulty: easy
+daily-date: null
+concepts: [tag, HEAD~n]
+
+brief: |
+  Your work is part of a release! Matt wants it marked so the team can always find it.
+  A *tag* is a label that never moves.
+
+  The release is the commit *before* the latest one on `main` (that's `C2`). Tag it `v1.0`.
+
+  Tip: click a commit to copy its sha, or count back from `HEAD` with `HEAD~1`.
+
+setup:
+  - git commit
+  - git commit
+  - git commit
+
+solution:
+  - git tag v1.0 C2
+
+goal:
+  - points-to: { tag: v1.0, commit: C2 }

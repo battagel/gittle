@@ -1,0 +1,24 @@
+title: Catch up with the team
+difficulty: easy
+daily-date: null
+origin: true
+concepts: [pull, fetch]
+
+brief: |
+  Overnight, Nikita pushed two commits to `main` on origin. Your laptop doesn't know yet: the graph only
+  shows what you've fetched, and the strip above it tells you what's new on origin.
+
+  Bring your `main` up to date with origin's.
+
+setup:
+  - git commit -m "Set up project"
+  - git push
+  - server: commit main -m "Fix footer links"
+  - server: commit main -m "Update pricing copy"
+
+solution:
+  - git pull
+
+goal:
+  - in-sync: main
+  - contains: { ref: main, changes: [C2, C3] }
