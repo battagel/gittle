@@ -1,0 +1,31 @@
+title: A better name
+difficulty: easy
+daily-date: null
+origin: true
+concepts: [branch -m, push, upstream]
+
+brief: |
+  You pushed your work as `feature`, and Matt points out that nobody will know what that is in a week.
+  It should be called `login-page`.
+
+  `git branch -m <new>` renames a branch, but only your copy: origin still has `feature`, and your
+  branch keeps tracking it. Rename it to `login-page` on origin too, make it track `origin/login-page`,
+  and remove the old `feature` from origin so nobody picks up the stale name.
+
+setup:
+  - git commit -m "Set up project"
+  - git push
+  - git switch -c feature
+  - git commit -m "Add login page"
+  - git push -u origin feature
+
+solution:
+  - git branch -m login-page
+  - git push -u origin login-page
+  - git push origin --delete feature
+
+goal:
+  - absent: feature
+  - absent: origin:feature
+  - pushed: login-page
+  - tracks: { branch: login-page, upstream: login-page }
