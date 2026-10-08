@@ -19,6 +19,8 @@ class RealRepo {
   readonly mate = join(this.root, 'mate') // a teammate's clone, for `server:` lines
   readonly hasOrigin: boolean
   readonly shaOf = new Map<string, string>() // engine label -> real sha
+  readonly protectedBranches: string[] = []
+  private clock = 0
 
   constructor(origin = false) {
     this.hasOrigin = origin
@@ -38,6 +40,8 @@ class RealRepo {
   }
 
   in(cwd: string, ...args: string[]): string {
+    // a clock that ticks per git call, so commit dates follow the engine's commit order (bisect's walk depends on it)
+    const date = `${1_700_000_000 + this.clock++ * 60} +0000`
     return execFileSync('git', args, {
       cwd,
       encoding: 'utf8',
@@ -50,6 +54,8 @@ class RealRepo {
         GIT_AUTHOR_EMAIL: 'gittle@example.com',
         GIT_COMMITTER_NAME: 'gittle',
         GIT_COMMITTER_EMAIL: 'gittle@example.com',
+        GIT_AUTHOR_DATE: date,
+        GIT_COMMITTER_DATE: date,
       },
     })
   }
@@ -75,7 +81,8 @@ class RealRepo {
     } catch {
       head = `detached:${local.sig(this.git('rev-parse', 'HEAD').trim())}`
     }
-    const shape: Shape = { branches: local.refs('refs/heads'), tags: local.refs('refs/tags'), head }
+    const reflog = this.git('reflog', '--format=%H', 'HEAD').trim().split('\n').filter(Boolean).map(local.sig)
+    const shape: Shape = { branches: local.refs('refs/heads'), tags: local.refs('refs/tags'), head, reflog }
     if (this.hasOrigin) {
       shape.remote = local.refs('refs/remotes/origin', (n) => n.replace(/^origin\//, ''))
       delete shape.remote['HEAD']
@@ -88,7 +95,8 @@ class RealRepo {
   private signer(dir: string) {
     const git = (...args: string[]) => this.in(dir, ...args)
     const parents = new Map<string, string[]>()
-    for (const line of git('rev-list', '--all', '--parents').trim().split('\n').filter(Boolean)) {
+    const reflog = dir === this.work ? ['--reflog'] : [] // reflog-only (abandoned) commits too
+    for (const line of git('rev-list', '--all', ...reflog, '--parents').trim().split('\n').filter(Boolean)) {
       const [sha, ...ps] = line.split(' ')
       parents.set(sha, ps)
     }
@@ -111,14 +119,36 @@ class RealRepo {
     }
     const refs = (prefix: string, rename = (n: string) => n) =>
       Object.fromEntries(
-        git('for-each-ref', '--format=%(refname:short) %(objectname)', prefix)
+        git('for-each-ref', '--format=%(refname:short) %(objectname) %(*objectname)', prefix)
           .trim()
           .split('\n')
           .filter(Boolean)
           .map((l) => l.split(' '))
-          .map(([name, sha]) => [rename(name), sig(sha)]),
+          .map(([name, sha, peeled]) => [rename(name), sig(peeled || sha)]), // annotated tags peel to their commit
       )
     return { sig, refs }
+  }
+
+  /** Protect a branch on the bare origin: a pre-receive hook rejecting non-fast-forward updates and deletes. */
+  protect(branch: string) {
+    this.protectedBranches.push(branch)
+    const hook = join(this.bare, 'hooks', 'pre-receive')
+    const list = this.protectedBranches.map((b) => `refs/heads/${b}`).join(' ')
+    writeFileSync(
+      hook,
+      `#!/bin/sh
+zero=0000000000000000000000000000000000000000
+while read old new ref; do
+  for p in ${list}; do
+    [ "$ref" = "$p" ] || continue
+    [ "$new" = "$zero" ] && echo "protected branch hook declined" && exit 1
+    [ "$old" != "$zero" ] && ! git merge-base --is-ancestor "$old" "$new" && echo "protected branch hook declined" && exit 1
+  done
+done
+exit 0
+`,
+      { mode: 0o755 },
+    )
   }
 
   destroy() {
@@ -130,6 +160,7 @@ interface Shape {
   branches: Record<string, string>
   tags: Record<string, string>
   head: string
+  reflog: string[] // HEAD's reflog, newest first
   remote?: Record<string, string> // origin/*
   server?: Record<string, string> // the server's own branches
 }
@@ -148,6 +179,7 @@ function engineShape(state: RepoState): Shape {
     branches: refs(state.branches),
     tags: refs(state.tags),
     head: state.head.type === 'branch' ? `branch:${state.head.name}` : `detached:${sig(state.head.sha)}`,
+    reflog: [...(state.reflogs.HEAD ?? [])].reverse().map((e) => sig(e.sha)),
   }
   if (state.origin) {
     shape.remote = refs(state.remoteTracking)
@@ -200,6 +232,9 @@ function serverStep(real: RealRepo, state: RepoState, directive: string): RepoSt
     case 'delete':
       mate('push', '-q', 'origin', '--delete', args[0])
       break
+    case 'protect':
+      real.protect(args[0])
+      break
   }
   if (created.length) {
     const tips = real.in(real.mate, 'rev-list', '--first-parent', '-n', String(created.length), 'HEAD').trim().split('\n').reverse()
@@ -212,6 +247,7 @@ function serverStep(real: RealRepo, state: RepoState, directive: string): RepoSt
 function step(real: RealRepo, state: RepoState, cmd: string): RepoState {
   if (cmd.startsWith('server:')) return serverStep(real, state, cmd.slice(7).trim())
   const r = run(state, cmd, { labels: true })
+  if (cmd.startsWith('npm ')) return r.state // the level's test suite exists only in the engine
   const err = r.output.find((o) => o.kind === 'error')
   if (err) throw new Error(`engine rejected "${cmd}": ${err.text}`)
 
@@ -225,8 +261,11 @@ function step(real: RealRepo, state: RepoState, cmd: string): RepoState {
     return r.state
   }
   const extra = sub === 'merge' || sub === 'revert' ? ['--no-edit'] : []
+  // `npm test` fails when the bug's change is in effect, i.e. its file exists
+  const realArgs =
+    sub === 'bisect' && args[0] === 'run' ? ['run', 'sh', '-c', `test ! -f ${state.bug}.txt`] : real.translate(args)
   try {
-    real.git(sub, ...extra, ...real.translate(args))
+    real.git(sub, ...extra, ...realArgs)
   } catch (e) {
     throw new Error(`real git rejected "${cmd}": ${(e as { stderr?: string }).stderr ?? e}`)
   }
@@ -358,10 +397,78 @@ describe.runIf(import.meta.env.GITTLE_REALGIT)('engine matches real git', { time
     }
   }, 60_000)
 
+  it('reflog refs, annotated tags and bisect match', () => {
+    real = new RealRepo()
+    let state: RepoState = { ...createRepo('inspect'), bug: 'C6' }
+    const go = (cmd: string) => {
+      state = step(real!, state, cmd)
+      expect(real!.shape(), `after "${cmd}"`).toEqual(engineShape(state))
+    }
+    for (let i = 0; i < 10; i++) go('git commit') // C1..C10; C6 breaks the tests
+    go('git tag -a v1.0 -m "Release 1.0" C3')
+    go('git reset --hard HEAD~3')
+    go('git commit') // C11
+    go('git reset --hard HEAD@{2}') // back to where main was before the reset
+    go('git switch -c side C2')
+    go('git switch main')
+    go('git checkout main@{1}')
+    go('git switch main')
+    // a manual bisect, marking as npm test says
+    go('git bisect start')
+    go('git bisect bad')
+    go('git bisect good C0')
+    for (let i = 0; i < 8 && !state.bisected; i++) {
+      const broken = run(state, 'npm test').output.some((o) => o.kind === 'error')
+      go(broken ? 'git bisect bad' : 'git bisect good')
+    }
+    expect(state.commits[state.bisected!].label).toBe('C6')
+    go('git bisect reset')
+    go('git bisect start HEAD C0')
+    go('git bisect run npm test')
+    expect(state.commits[state.bisected!].label).toBe('C6')
+    go('git bisect reset')
+  })
+
+  it.each(['C4', 'C7', 'C9', 'C12'])('bisect through merges matches (bug %s)', (bug) => {
+    real = new RealRepo()
+    let state: RepoState = { ...createRepo('bisect-merges'), bug }
+    const go = (cmd: string) => {
+      state = step(real!, state, cmd)
+      expect(real!.shape(), `after "${cmd}"`).toEqual(engineShape(state))
+    }
+    for (const cmd of [
+      'git commit', 'git commit', 'git switch -c a', 'git commit', 'git commit', 'git switch main', 'git commit',
+      'git switch -c b', 'git commit', 'git commit', 'git switch main', 'git merge a', 'git commit', 'git merge b',
+      'git commit', 'git commit',
+    ]) go(cmd)
+    // no `bisect skip` here: after a skip git picks pseudo-randomly near the midpoint
+    go('git bisect start HEAD C0')
+    for (let i = 0; i < 12 && !state.bisected; i++) {
+      const broken = run(state, 'npm test').output.some((o) => o.kind === 'error')
+      go(broken ? 'git bisect bad' : 'git bisect good')
+    }
+    go('git bisect reset')
+    go('git bisect start HEAD C0')
+    go('git bisect run npm test')
+    expect(state.commits[state.bisected!].label).toBe(bug)
+    go('git bisect reset')
+  })
+
+  it('protected branches reject force-pushes in both', () => {
+    real = new RealRepo(true)
+    let state = createRepo('protect', { origin: true })
+    for (const cmd of ['git commit', 'git push', 'server: protect main', 'git reset --hard HEAD~1', 'git commit']) {
+      state = step(real, state, cmd)
+    }
+    expect(run(state, 'git push --force').output[0].kind).toBe('error')
+    expect(() => real!.git('push', '--force', 'origin', 'main')).toThrow()
+    expect(real.shape()).toEqual(engineShape(state))
+  })
+
   it.each(Object.entries(levelFiles))('%s', (path, source) => {
     const level = parseLevel(path, source)
     real = new RealRepo(level.start.origin !== null)
-    let state = createRepo(level.id, { origin: level.start.origin !== null })
+    let state: RepoState = { ...createRepo(level.id, { origin: level.start.origin !== null }), bug: level.bug }
     for (const cmd of [...level.setup, ...level.solution]) {
       state = step(real, state, cmd)
       expect(real.shape(), `after "${cmd}"`).toEqual(engineShape(state))
