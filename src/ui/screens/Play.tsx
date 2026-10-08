@@ -1,8 +1,9 @@
+import { useCallback, useRef, useState, type RefObject } from 'react'
 import { Link, useParams } from 'react-router'
 import { Group, Panel, Separator, useDefaultLayout } from 'react-resizable-panels'
 import { getLevel, hintsAllowed, levelName, nextLevel, type Level } from '../../levels/load'
 import { afterLevel, formatDay } from '../../levels/progress'
-import { layoutStorage } from '../../storage'
+import { layoutStorage, load, update } from '../../storage'
 import { SimpleTerminal } from '../../terminal/SimpleTerminal'
 import type { TerminalComponent } from '../../terminal/terminal'
 import { Brief } from '../components/Brief'
@@ -11,6 +12,7 @@ import { GoalList } from '../components/GoalList'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { GraphPanel } from '../game/GraphPanel'
 import { useGame } from '../game/useGame'
+import { Tour, type TourStep } from '../game/Tour'
 import { WinModal } from '../game/WinModal'
 
 const Terminal: TerminalComponent = SimpleTerminal
@@ -69,8 +71,42 @@ export function Play() {
   return <Game key={levelId} level={level} />
 }
 
+const tourSteps = (refs: Record<'scenario' | 'graph' | 'terminal' | 'toolbar', RefObject<HTMLElement | null>>): TourStep[] => [
+  {
+    target: refs.scenario,
+    title: 'The scenario',
+    text: 'Every level starts with a short story and a goal. The checklist underneath ticks itself off as you go.',
+  },
+  {
+    target: refs.graph,
+    title: 'Your repository',
+    text: 'Circles are commits, with their sha inside. Coloured lines are branches, and the labels show where each branch and `HEAD` point. Faded commits are ones nothing points at any more. Click a commit to copy its sha.',
+  },
+  {
+    target: refs.terminal,
+    title: 'The terminal',
+    text: 'Type real git commands here, exactly as you would in a terminal. `help` lists everything gittle understands.',
+  },
+  {
+    target: refs.toolbar,
+    title: 'Strokes and par',
+    text: 'Par is how many commands the straightforward solution takes. Only commands that change the repo count as strokes, so looking around is free. Stuck? **Hint** plays the next step for you, and **Retry** starts again.',
+  },
+]
+
 function Game({ level }: { level: Level | null }) {
   const game = useGame(level)
+  const refs = {
+    scenario: useRef<HTMLElement>(null),
+    graph: useRef<HTMLDivElement>(null),
+    terminal: useRef<HTMLElement>(null),
+    toolbar: useRef<HTMLDivElement>(null),
+  }
+  const [touring, setTouring] = useState(() => !load().settings.toured)
+  const endTour = useCallback(() => {
+    setTouring(false)
+    update((d) => void (d.settings.toured = true))
+  }, [])
   const columns = useDefaultLayout({ id: 'play-columns', storage: layoutStorage })
   const left = useDefaultLayout({ id: 'play-left', storage: layoutStorage })
   const canHint = level !== null && hintsAllowed(level)
@@ -96,7 +132,7 @@ function Game({ level }: { level: Level | null }) {
         <Panel id="left" defaultSize="38" minSize={300}>
           <Group orientation="vertical" id="play-left" {...left}>
             <Panel id="scenario" defaultSize="34" minSize={100}>
-              <section className="h-full overflow-y-auto rounded-2xl border border-line bg-surface p-5">
+              <section ref={refs.scenario} className="h-full overflow-y-auto rounded-2xl border border-line bg-surface p-5">
                 <div className="flex items-center justify-between">
                   {level ? (
                     <span className="flex items-center gap-3">
@@ -125,7 +161,7 @@ function Game({ level }: { level: Level | null }) {
             <Handle vertical />
             <Panel id="terminal" minSize={170}>
               <div className="flex h-full flex-col gap-3">
-                <div className="flex flex-wrap items-center gap-2 px-1 py-1">
+                <div ref={refs.toolbar} className="flex flex-wrap items-center gap-2 px-1 py-1">
                   <button
                     onClick={game.reset}
                     className="flex items-center gap-2 rounded-full bg-surface px-5 py-2.5 text-sm font-semibold shadow-sm ring-1 ring-line transition hover:-translate-y-0.5 hover:shadow-md"
@@ -159,7 +195,7 @@ function Game({ level }: { level: Level | null }) {
                   </span>
                   {level && <NextButton level={level} won={game.won} />}
                 </div>
-                <section className="min-h-0 flex-1 rounded-2xl border border-line bg-surface">
+                <section ref={refs.terminal} className="min-h-0 flex-1 rounded-2xl border border-line bg-surface">
                   <Terminal
                     lines={game.lines}
                     prompt={game.prompt}
@@ -174,10 +210,13 @@ function Game({ level }: { level: Level | null }) {
         </Panel>
         <Handle />
         <Panel id="graph" minSize={320}>
-          <GraphPanel repo={game.repo} effects={game.effects} resets={game.resets} />
+          <div ref={refs.graph} className="h-full">
+            <GraphPanel repo={game.repo} effects={game.effects} resets={game.resets} />
+          </div>
         </Panel>
       </Group>
 
+      {touring && <Tour steps={tourSteps(refs)} onDone={endTour} />}
       {level && game.win && (
         <WinModal level={level} win={game.win} next={nextLevel(level.id)} onRetry={game.reset} onClose={game.closeWin} />
       )}

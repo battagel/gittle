@@ -16,6 +16,7 @@ export interface SaveData {
     difficulties?: ('easy' | 'medium' | 'pro')[] // level-select filter; empty = all
     concepts?: string[] // level-select filter; empty = all
     layouts?: Record<string, string> // react-resizable-panels layouts by group id
+    toured?: boolean // has seen the first-run tour of the play screen
   }
 }
 
