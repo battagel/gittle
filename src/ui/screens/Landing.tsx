@@ -37,11 +37,11 @@ export function Landing() {
   const first = getLevel('E01')
 
   return (
-    <div className="mx-auto max-w-6xl px-10">
+    <div className="mx-auto max-w-7xl px-10">
       <TopBar />
 
       <main>
-        <section className="grid min-h-[620px] grid-cols-[1fr_1.1fr] items-center gap-16">
+        <section className="grid min-h-[620px] grid-cols-[1fr_1.618fr] items-center gap-16">
           <div>
             <Wordmark size="text-7xl" />
             <p className="mt-6 max-w-md text-xl leading-relaxed text-muted">
