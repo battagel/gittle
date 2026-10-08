@@ -525,10 +525,89 @@ describe('remotes', () => {
     expect(errorOf(clone('git branch x'), 'git branch -m x main')).toMatch(/already exists/)
   })
 
+  it('protected branches reject force-pushes and deletion', () => {
+    const s = clone('git commit', 'git push', 'server: protect main', 'git reset --hard HEAD~1', 'git commit')
+    expect(errorOf(s, 'git push --force')).toMatch(/protected branch hook declined/)
+    expect(errorOf(s, 'git push origin --delete main')).toMatch(/protected/)
+  })
+
   it('deleting a server branch, and pruning it', () => {
     const s = clone('git switch -c tmp', 'git push -u origin tmp', 'git push origin --delete tmp')
     expect(s.origin!.branches.tmp).toBeUndefined()
     expect(s.remoteTracking.tmp).toBeUndefined()
+  })
+})
+
+describe('inspection', () => {
+  it('reflog lists where HEAD has been; HEAD@{n} and main@{n} resolve through it', () => {
+    const s = play('git commit', 'git commit', 'git reset --hard HEAD~2', 'git commit')
+    const lines = run(s, 'git reflog').output.map((o) => o.text)
+    expect(lines[0]).toMatch(/HEAD@\{0\}: commit: C3$/)
+    expect(lines[1]).toMatch(/HEAD@\{1\}: reset: moving to HEAD~2$/)
+    expect(label(s, 'HEAD@{2}')).toBe('C2') // right before the reset
+    expect(label(s, 'main@{2}')).toBe('C2')
+    expect(label(step(s, 'git reset --hard HEAD@{2}'), 'HEAD')).toBe('C2')
+  })
+
+  it('merge-base finds where two lines split', () => {
+    const s = play('git commit', 'git switch -c f', 'git commit', 'git switch main', 'git commit')
+    expect(run(s, 'git merge-base main f').output[0].text).toBe(resolve(s, 'C1', { labels: true }))
+    expect(run(s, 'git merge-base --is-ancestor C1 f'.replace('C1', resolve(s, 'C1', { labels: true })) ).output[0].text).toMatch(/^yes/)
+  })
+
+  it('branch/tag --contains and --merged filter the lists', () => {
+    const s = play('git commit', 'git branch old', 'git commit', 'git tag v1', 'git switch -c f', 'git commit', 'git switch main')
+    const fix = resolve(s, 'C2', { labels: true })
+    expect(run(s, `git branch --contains ${fix}`).output.map((o) => o.text.trim())).toEqual(['f', '* main'])
+    expect(run(s, 'git branch --merged main').output.map((o) => o.text.trim())).toEqual(['* main', 'old'])
+    expect(run(s, `git tag --contains ${resolve(s, 'C1', { labels: true })}`).output.map((o) => o.text)).toEqual(['v1'])
+  })
+
+  it('describe names a commit by its nearest tag (annotated, or any with --tags)', () => {
+    const s = play('git commit', 'git tag -a v1.0 -m "Release 1.0"', 'git commit', 'git commit', 'git tag v1.1')
+    expect(run(s, 'git describe').output[0].text).toBe(`v1.0-2-g${headSha(s)}`)
+    expect(run(s, 'git describe --tags').output[0].text).toBe('v1.1')
+    expect(run(play('git tag light'), 'git describe').output[0].text).toMatch(/No annotated tags/)
+  })
+
+  it('log --grep, -n, --first-parent and A...B --left-right', () => {
+    const s = play('git commit -m "Fix login"', 'git switch -c f', 'git commit -m "Add search"', 'git switch main', 'git commit -m "Fix footer"', 'git merge f')
+    expect(run(s, 'git log --oneline --grep Fix').output).toHaveLength(2)
+    expect(run(s, 'git log --oneline -2').output).toHaveLength(2)
+    expect(run(s, 'git log --oneline --first-parent').output.map((o) => o.text)).not.toContainEqual(expect.stringContaining('Add search'))
+    expect(run(s, 'git log --oneline --left-right main~1...f').output.map((o) => o.text[0]).sort()).toEqual(['<', '>'])
+  })
+})
+
+describe('bisect', () => {
+  // ten commits; C6 broke the tests
+  function bugged() {
+    const s = play(...Array.from({ length: 10 }, () => 'git commit'))
+    return { ...s, bug: 'C6' }
+  }
+
+  it('npm test passes or fails depending on the bug', () => {
+    const s = bugged()
+    expect(run(s, 'npm test').output.some((o) => o.kind === 'error')).toBe(true)
+    expect(run(step(s, 'git checkout HEAD~6'), 'npm test').output.some((o) => o.kind === 'error')).toBe(false)
+  })
+
+  it('a manual bisect halves the range each time and names the first bad commit', () => {
+    let s = step(step(bugged(), 'git bisect start'), 'git bisect bad')
+    s = step(s, `git bisect good ${resolve(s, 'C0', { labels: true })}`)
+    for (let i = 0; i < 8 && !s.bisected; i++) {
+      const bad = run(s, 'npm test').output.some((o) => o.kind === 'error')
+      s = step(s, bad ? 'git bisect bad' : 'git bisect good')
+    }
+    expect(s.commits[s.bisected!].label).toBe('C6')
+  })
+
+  it('bisect run does the whole search in one command; reset goes back', () => {
+    let s = step(bugged(), `git bisect start HEAD ${resolve(bugged(), 'C0', { labels: true })}`)
+    const r = run(s, 'git bisect run npm test')
+    expect(r.state.commits[r.state.bisected!].label).toBe('C6')
+    s = step(r.state, 'git bisect reset')
+    expect(s.head).toEqual({ type: 'branch', name: 'main' })
   })
 })
 

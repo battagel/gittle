@@ -2,7 +2,7 @@ import { fail } from '../errors'
 import { ancestors, canApply, isAncestor } from '../graph'
 import { parseArgs } from '../parse'
 import { resolve } from '../refs'
-import { type Ctx, copyCommit, currentBranch, headSha, setHead } from '../repo'
+import { type Ctx, copyCommit, currentBranch, headSha, logRef, moveBranch, setHead } from '../repo'
 import type { Sha } from '../state'
 import { attach, detach } from './switch'
 
@@ -26,11 +26,16 @@ export function rebase(ctx: Ctx, args: string[]) {
     }
   }
 
-  replayOnto(ctx, upstream, onto)
+  replayOnto(ctx, upstream, onto, { reflog: 'rebase', ontoName: options.onto ?? positional[0] })
 }
 
 /** Replay HEAD's commits that aren't in `upstream` onto `onto` (default: upstream). Shared with `git pull --rebase`. */
-export function replayOnto(ctx: Ctx, upstream: Sha, onto: Sha | null = null) {
+export function replayOnto(
+  ctx: Ctx,
+  upstream: Sha,
+  onto: Sha | null,
+  log: { reflog: string; ontoName: string }, // "rebase" / "pull --rebase", and what it was given
+) {
   const s = ctx.state
   const head = headSha(s)
   const name = currentBranch(s) ?? 'HEAD'
@@ -47,7 +52,9 @@ export function replayOnto(ctx: Ctx, upstream: Sha, onto: Sha | null = null) {
     .filter((c) => c.parents.length < 2)
     .sort((a, b) => a.seq - b.seq)
 
+  // reflog: git checks out the new base, picks each commit there, then moves the branch
   let tip = onto ?? upstream
+  logRef(s, 'HEAD', tip, `${log.reflog} (start): checkout ${log.ontoName}`)
   for (const original of toCopy) {
     if (!canApply(s, tip, original.change)) {
       ctx.info(`dropping ${original.sha} ${original.label} -- patch contents already upstream`)
@@ -56,7 +63,15 @@ export function replayOnto(ctx: Ctx, upstream: Sha, onto: Sha | null = null) {
     const copy = copyCommit(s, original, tip)
     ctx.effect({ type: 'copy', from: original.sha, to: copy.sha })
     tip = copy.sha
+    logRef(s, 'HEAD', tip, `${log.reflog} (pick): ${copy.message}`)
   }
-  setHead(ctx, tip)
+  const branch = currentBranch(s)
+  ctx.reason = branch ? `${log.reflog} (finish): refs/heads/${branch} onto ${onto ?? upstream}` : `${log.reflog} (finish)`
+  if (branch) {
+    moveBranch(ctx, branch, tip)
+    logRef(s, 'HEAD', tip, `${log.reflog} (finish): returning to refs/heads/${branch}`)
+  } else {
+    setHead(ctx, tip)
+  }
   ctx.info(`Successfully rebased and updated ${name === 'HEAD' ? 'detached HEAD' : `refs/heads/${name}`}.`)
 }

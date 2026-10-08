@@ -1,14 +1,16 @@
 import { fail } from '../errors'
 import { parseArgs } from '../parse'
 import { resolve, tryResolve } from '../refs'
-import { type Ctx, createBranch, currentBranch, moveHead } from '../repo'
+import { type Ctx, createBranch, currentBranch, headLabel, headSha, logRef, moveHead } from '../repo'
 import { setUpstream, trackIfRemote } from './remote'
 
 // `record`: switch/checkout remember where they came from (for `git switch -`), even when already there.
 // Rebase switches branches without recording, as in git.
 export function attach(ctx: Ctx, name: string, created = false, record = true) {
   if (record) ctx.state.previous = ctx.state.head
+  if (record) ctx.reason = `checkout: moving from ${headLabel(ctx.state)} to ${name}`
   if (currentBranch(ctx.state) === name && !created) {
+    logRef(ctx.state, 'HEAD', headSha(ctx.state), ctx.reason) // git logs this too
     ctx.info(`Already on '${name}'`)
     return
   }
@@ -16,8 +18,9 @@ export function attach(ctx: Ctx, name: string, created = false, record = true) {
   ctx.info(created ? `Switched to a new branch '${name}'` : `Switched to branch '${name}'`)
 }
 
-export function detach(ctx: Ctx, sha: string, record = true) {
+export function detach(ctx: Ctx, sha: string, record = true, target = sha) {
   if (record) ctx.state.previous = ctx.state.head
+  if (record) ctx.reason = `checkout: moving from ${headLabel(ctx.state)} to ${target}`
   moveHead(ctx, { type: 'detached', sha })
   ctx.info(`HEAD is now at ${sha}`)
   ctx.hint("You are in 'detached HEAD' state. To keep commits you make here, create a branch: git switch -c <name>")
@@ -25,6 +28,7 @@ export function detach(ctx: Ctx, sha: string, record = true) {
 
 /** `git switch feature` with only origin/feature: create a local branch tracking it (git's "DWIM"). */
 export function dwim(ctx: Ctx, name: string) {
+  ctx.reason = `branch: Created from origin/${name}`
   createBranch(ctx, name, ctx.state.remoteTracking[name])
   setUpstream(ctx, name, `origin/${name}`)
   attach(ctx, name, true)
@@ -47,6 +51,7 @@ export function switchCmd(ctx: Ctx, args: string[]) {
 
   const create = options.create ?? options['force-create']
   if (create) {
+    ctx.reason = `branch: Created from ${positional[0] ?? 'HEAD'}`
     createBranch(ctx, create, resolve(s, positional[0] ?? 'HEAD', ctx.opts), 'force-create' in options)
     trackIfRemote(ctx, create, positional[0] ?? 'HEAD')
     attach(ctx, create, true)

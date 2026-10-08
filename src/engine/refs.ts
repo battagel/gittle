@@ -40,6 +40,14 @@ function resolveBase(state: RepoState, base: string, opts: RunOptions): Sha | nu
   if (base === 'HEAD' || base === '@') {
     return state.head.type === 'branch' ? state.branches[state.head.name] : state.head.sha
   }
+  const at = /^(.*)@\{(\d+)\}$/.exec(base)
+  if (at) {
+    // HEAD@{2}, main@{1}, @{1} (the current branch): where that ref was n moves ago
+    const ref = at[1] === '' ? (state.head.type === 'branch' ? state.head.name : 'HEAD') : at[1]
+    const log = state.reflogs[ref]
+    if (!log) return null
+    return log[log.length - 1 - Number(at[2])]?.sha ?? null
+  }
   if (base === '@{u}' || base === '@{upstream}') {
     const b = state.head.type === 'branch' ? state.upstream[state.head.name] : undefined
     return b === undefined ? null : (state.remoteTracking[b] ?? null)

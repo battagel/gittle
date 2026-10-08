@@ -9,6 +9,8 @@ import { rebase } from './commands/rebase'
 import { reset } from './commands/reset'
 import { revert } from './commands/revert'
 import { fetch, pull, push, remote } from './commands/remote'
+import { describe, mergeBase, npmTest, reflog } from './commands/inspect'
+import { bisect } from './commands/bisect'
 import { show } from './commands/show'
 import { status } from './commands/status'
 import { switchCmd } from './commands/switch'
@@ -41,6 +43,10 @@ const commands: Record<string, (ctx: Ctx, args: string[]) => void> = {
   pull,
   push,
   remote,
+  reflog,
+  'merge-base': mergeBase,
+  describe,
+  bisect,
 }
 
 const noFiles = ['add', 'stash', 'diff', 'restore', 'rm', 'mv', 'clean', 'blame']
@@ -60,8 +66,9 @@ export function run(state: RepoState, input: string, opts: RunOptions = {}): Run
     return { state, output, changed: false, effects: [] }
   }
   const changed = !sameRepo(state, ctx.state)
-  // Bookkeeping that isn't a stroke (where `git switch -` goes) still has to stick.
-  const touched = changed || JSON.stringify(ctx.state.previous) !== JSON.stringify(state.previous)
+  // Bookkeeping that isn't a stroke (where `git switch -` goes, reflogs, bisect marks) still has to stick.
+  const bookkeeping = (x: RepoState) => JSON.stringify([x.previous, x.reflogs, x.bisect, x.bisected])
+  const touched = changed || bookkeeping(ctx.state) !== bookkeeping(state)
   return { state: touched ? ctx.state : state, output: ctx.output, changed, effects: changed ? ctx.effects : [] }
 }
 
@@ -71,6 +78,7 @@ function dispatch(ctx: Ctx, input: string) {
   const [program, name, ...args] = tokens
 
   if (program === 'help') return help(ctx, name)
+  if (program === 'npm') return npmTest(ctx, tokens.slice(1))
   if (program !== 'git') fail(`gittle only speaks git: '${program}' isn't a git command.`, 'Try `help`.')
   if (!name || name === 'help' || name === '--help') return help(ctx, args[0])
   if (args.includes('-h') || args.includes('--help')) return help(ctx, name)

@@ -22,6 +22,7 @@ export function merge(ctx: Ctx, args: string[]) {
     ffOnly: flags.has('ff-only'),
     message: options.message?.trim() || `Merge ${what} '${what === 'commit' ? target : name}'`,
     addInto: !options.message?.trim(),
+    reflog: `merge ${name}`,
   })
 }
 
@@ -29,7 +30,7 @@ export function merge(ctx: Ctx, args: string[]) {
 export function mergeInto(
   ctx: Ctx,
   target: Sha,
-  opts: { noFF?: boolean; ffOnly?: boolean; message: string; addInto?: boolean },
+  opts: { noFF?: boolean; ffOnly?: boolean; message: string; addInto?: boolean; reflog: string },
 ) {
   const s = ctx.state
   const head = headSha(s)
@@ -38,6 +39,7 @@ export function mergeInto(
     return
   }
   if (isAncestor(s, head, target) && !opts.noFF) {
+    ctx.reason = `${opts.reflog}: Fast-forward`
     setHead(ctx, target)
     ctx.info(`Updating ${head}..${target}`)
     ctx.info('Fast-forward')
@@ -47,6 +49,7 @@ export function mergeInto(
 
   const into = opts.addInto && currentBranch(s) && currentBranch(s) !== 'main' ? ` into ${currentBranch(s)}` : ''
   const c = newCommit(s, [head, target], { change: '', message: opts.message + into })
+  ctx.reason = `${opts.reflog}: Merge made by the 'ort' strategy.`
   ctx.effect({ type: 'merge', sha: c.sha })
   setHead(ctx, c.sha)
   ctx.info("Merge made by the 'ort' strategy.")

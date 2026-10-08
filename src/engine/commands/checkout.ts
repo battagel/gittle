@@ -15,6 +15,7 @@ export function checkout(ctx: Ctx, args: string[]) {
 
   const create = options.create ?? options['force-create']
   if (create) {
+    ctx.reason = `branch: Created from ${positional[0] ?? 'HEAD'}`
     createBranch(ctx, create, resolve(s, positional[0] ?? 'HEAD', ctx.opts), 'force-create' in options)
     trackIfRemote(ctx, create, positional[0] ?? 'HEAD')
     attach(ctx, create, true)
@@ -39,5 +40,5 @@ export function checkout(ctx: Ctx, args: string[]) {
   }
   const sha = tryResolve(s, target, ctx.opts)
   if (!sha) fail(`error: pathspec '${target}' did not match any file(s) known to git`)
-  detach(ctx, sha)
+  detach(ctx, sha, true, target)
 }

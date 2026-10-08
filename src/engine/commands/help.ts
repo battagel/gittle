@@ -24,7 +24,10 @@ export const usage: Record<string, string[]> = {
   ],
   revert: ['git revert <sha>...  |  git revert -m 1 <merge>', 'Make a new commit that undoes <sha>, or a whole merge. Safe for shared history.'],
   tag: ['git tag [<name> [<ref>]]  |  git tag -d <name>', 'List, create or delete tags: labels that never move.'],
-  log: ['git log [--oneline] [--all] [<ref> | A..B]', 'Show the commits reachable from a ref, or what B has that A doesn\'t.'],
+  log: [
+    'git log [--oneline] [--all] [--first-parent] [-n <k>] [--grep <text>] [<ref> | A..B | A...B --left-right]',
+    'Show the commits reachable from a ref, what B has that A doesn\'t, or what either has that the other doesn\'t.',
+  ],
   show: ['git show [<ref>...]', 'Show a commit: its full sha, parents and the change it carries.'],
   status: ['git status', 'Show where HEAD is, and how your branch compares with origin.'],
   fetch: ['git fetch [--prune]', "Download what's new on origin into origin/* (your branches don't move)."],
@@ -34,6 +37,13 @@ export const usage: Record<string, string[]> = {
     'Send your branch to origin. Rejected if origin has work you don\'t; --force-with-lease overwrites only if nobody else pushed.',
   ],
   remote: ['git remote [-v]', 'List remotes (just origin).'],
+  reflog: ['git reflog [show <branch>]', 'Where HEAD (or a branch) has pointed, newest first: use HEAD@{n} / main@{n} as refs.'],
+  'merge-base': ['git merge-base <a> <b>  |  git merge-base --is-ancestor <a> <b>', 'The best common ancestor: where two lines of work split.'],
+  describe: ['git describe [--tags] [<commit>]', 'Name a commit by the nearest tag: v1.2-3-gabc1234 = 3 commits after v1.2.'],
+  bisect: [
+    'git bisect start  |  git bisect bad / good [<commit>]  |  git bisect run npm test  |  git bisect reset',
+    'Binary-search for the commit that broke things. `npm test` tells you whether the commit you are on is good.',
+  ],
 }
 
 export function help(ctx: Ctx, topic?: string) {

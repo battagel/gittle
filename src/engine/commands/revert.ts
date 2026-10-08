@@ -31,6 +31,7 @@ export function revert(ctx: Ctx, args: string[]) {
     }
     if (!change || !canApply(s, headSha(s), change)) fail(`error: could not revert ${sha}: its change isn't here to undo.`)
     const c = newCommit(s, [headSha(s)], { change, message: `Revert "${original.message}"` })
+    ctx.reason = `revert: ${c.message}`
     ctx.effect({ type: 'revert', of: sha, sha: c.sha })
     setHead(ctx, c.sha)
     ctx.info(`[${headName(s)} ${c.sha}] ${c.message}`)

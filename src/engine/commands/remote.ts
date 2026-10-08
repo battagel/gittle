@@ -78,12 +78,17 @@ export function pull(ctx: Ctx, args: string[]) {
   const head = headSha(s)
   const diverged = !isAncestor(s, target, head) && !isAncestor(s, head, target)
 
-  if (flags.has('rebase')) return replayOnto(ctx, target)
+  if (flags.has('rebase')) return replayOnto(ctx, target, null, { reflog: 'pull --rebase', ontoName: target })
   if (diverged && !flags.has('merge') && !flags.has('ff') && !flags.has('no-ff')) {
     if (flags.has('ff-only')) fail('fatal: Not possible to fast-forward, aborting.')
     fail('fatal: Need to specify how to reconcile divergent branches.', 'git pull --rebase  (replay your commits on top), or  git pull --no-rebase  (merge)')
   }
-  mergeInto(ctx, target, { noFF: flags.has('no-ff'), ffOnly: flags.has('ff-only'), message: `Merge branch '${upstream}' of origin` })
+  mergeInto(ctx, target, {
+    noFF: flags.has('no-ff'),
+    ffOnly: flags.has('ff-only'),
+    message: `Merge branch '${upstream}' of origin`,
+    reflog: 'pull',
+  })
 }
 
 export function push(ctx: Ctx, args: string[]) {
@@ -108,6 +113,7 @@ export function push(ctx: Ctx, args: string[]) {
     if (!names.length) fail('fatal: --delete doesn\'t make sense without any refs')
     for (const b of names) {
       if (origin.branches[b] === undefined) fail(`error: unable to delete '${b}': remote ref does not exist`)
+      if (origin.protected.includes(b)) fail(` ! [remote rejected] ${b} (protected branch hook declined)`, `'${b}' is protected on origin: it can't be deleted.`)
       delete origin.branches[b]
       moveRemote(ctx, b, null)
       ctx.info(` - [deleted]         ${b}`)
@@ -157,6 +163,11 @@ export function push(ctx: Ctx, args: string[]) {
       ctx.info('Everything up-to-date')
     } else if (theirs === undefined || isAncestor(s, theirs, sha)) {
       ctx.info(theirs === undefined ? ` * [new branch]      ${src} -> ${dst}` : `   ${theirs}..${sha}  ${src} -> ${dst}`)
+    } else if (origin.protected.includes(dst)) {
+      fail(
+        ` ! [remote rejected] ${src} -> ${dst} (protected branch hook declined)`,
+        `'${dst}' is protected on origin: history there can only move forward. No force-pushes; fix it with new commits (git revert) instead.`,
+      )
     } else if (flags.has('lease') && s.remoteTracking[dst] !== theirs) {
       fail(` ! [rejected]        ${src} -> ${dst} (stale info)`, `origin/${dst} is out of date: someone pushed since you last fetched. Fetch and look before overwriting.`)
     } else if (flags.has('force') || flags.has('lease')) {

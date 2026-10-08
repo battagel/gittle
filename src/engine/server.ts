@@ -16,6 +16,7 @@ import type { OutputLine, RepoState, Sha } from './state'
  *   server: branch <name> <ref>                  a teammate pushed a new branch
  *   server: force <branch> <ref>                 someone force-pushed
  *   server: delete <branch>                      a branch was deleted on the server
+ *   server: protect <branch>                     the branch rejects force-pushes and deletion
  */
 export function runServer(state: RepoState, directive: string): { state: RepoState; output: OutputLine[] } {
   const s = structuredClone(state)
@@ -72,6 +73,12 @@ export function runServer(state: RepoState, directive: string): { state: RepoSta
         const [b, ref] = args
         if (!b || !ref) fail(`server: ${verb} <branch> <ref>`)
         origin.branches[b] = at(ref)
+        break
+      }
+      case 'protect': {
+        if (!args[0]) fail('server: protect <branch>')
+        branchTip(args[0])
+        if (!origin.protected.includes(args[0])) origin.protected.push(args[0])
         break
       }
       case 'delete': {

@@ -12,6 +12,7 @@ export function commit(ctx: Ctx, args: string[]) {
 
   const s = ctx.state
   const c = newCommit(s, [headSha(s)], { message: options.message?.trim() || undefined })
+  ctx.reason = `commit: ${c.message}`
   ctx.effect({ type: 'commit', sha: c.sha })
   setHead(ctx, c.sha)
   ctx.info(`[${headName(s)} ${c.sha}] ${c.message}`)

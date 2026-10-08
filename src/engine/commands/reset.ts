@@ -11,6 +11,7 @@ export function reset(ctx: Ctx, args: string[]) {
   if (positional.length > 1) fail('fatal: too many arguments')
 
   const sha = resolve(ctx.state, positional[0] ?? 'HEAD', ctx.opts)
+  ctx.reason = `reset: moving to ${positional[0] ?? 'HEAD'}`
   setHead(ctx, sha)
   ctx.info(`HEAD is now at ${sha}`)
 }

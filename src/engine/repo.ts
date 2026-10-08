@@ -9,6 +9,8 @@ export class Ctx {
   effects: Effect[] = []
   readonly state: RepoState
   readonly opts: RunOptions
+  /** What the current command is doing, in git's reflog wording. Every ref it moves gets an entry with this. */
+  reason = ''
 
   constructor(state: RepoState, opts: RunOptions) {
     this.state = state
@@ -38,13 +40,20 @@ export function createRepo(seed = 'gittle', opts: { origin?: boolean } = {}): Re
     origin: null,
     remoteTracking: {},
     upstream: {},
+    annotated: {},
+    reflogs: {},
+    bisect: null,
+    bisected: null,
+    bug: null,
     nextNumber: 0,
     seed,
   }
   state.branches.main = newCommit(state, []).sha
+  state.reflogs.HEAD = [{ sha: state.branches.main, message: 'commit (initial): C0' }]
+  state.reflogs.main = [{ sha: state.branches.main, message: 'commit (initial): C0' }]
   if (opts.origin) {
     // as if freshly cloned: origin/main == main, and main tracks it
-    state.origin = { branches: { main: state.branches.main }, tags: {}, pullRequests: 0 }
+    state.origin = { branches: { main: state.branches.main }, tags: {}, pullRequests: 0, protected: [] }
     state.remoteTracking.main = state.branches.main
     state.upstream.main = 'main'
   }
@@ -91,23 +100,36 @@ export function copyCommit(state: RepoState, original: Commit, parent: Sha, loca
   return addCommit(state, label, [parent], original.change, original.message, local)
 }
 
+/** Add a reflog entry for a ref ("HEAD" or a branch). */
+export function logRef(state: RepoState, ref: string, sha: Sha, message: string) {
+  ;(state.reflogs[ref] ??= []).push({ sha, message })
+}
+
 /** Move whatever HEAD points at (the current branch, or HEAD itself when detached) to `sha`. */
 export function setHead(ctx: Ctx, sha: Sha) {
   const s = ctx.state
   if (s.head.type === 'branch') {
+    if (s.branches[s.head.name] === sha) return
     moveBranch(ctx, s.head.name, sha)
   } else {
+    if (s.head.sha === sha) return
     const from = s.head
     s.head = { type: 'detached', sha }
     ctx.effect({ type: 'move-head', from, to: s.head })
   }
+  logRef(s, 'HEAD', sha, ctx.reason)
 }
 
 export function moveBranch(ctx: Ctx, name: string, to: Sha | null) {
   const from = ctx.state.branches[name] ?? null
   if (from === to) return
-  if (to === null) delete ctx.state.branches[name]
-  else ctx.state.branches[name] = to
+  if (to === null) {
+    delete ctx.state.branches[name]
+    delete ctx.state.reflogs[name]
+  } else {
+    ctx.state.branches[name] = to
+    logRef(ctx.state, name, to, ctx.reason)
+  }
   ctx.effect({ type: 'move-ref', kind: 'branch', name, from, to })
 }
 
@@ -128,10 +150,17 @@ export function moveRemote(ctx: Ctx, name: string, to: Sha | null) {
   ctx.effect({ type: 'move-ref', kind: 'remote', name, from, to })
 }
 
+/** Point HEAD somewhere else (switch/checkout). Logged even when it doesn't move, as git does. */
 export function moveHead(ctx: Ctx, to: Head) {
   const from = ctx.state.head
   ctx.state.head = to
+  logRef(ctx.state, 'HEAD', headSha(ctx.state), ctx.reason)
   ctx.effect({ type: 'move-head', from, to })
+}
+
+/** How git names where HEAD is, in "checkout: moving from X to Y". */
+export function headLabel(state: RepoState): string {
+  return state.head.type === 'branch' ? state.head.name : state.head.sha
 }
 
 export function createBranch(ctx: Ctx, name: string, sha: Sha, force = false) {
@@ -148,7 +177,7 @@ export function headName(state: RepoState): string {
 
 /** Identifies a repo state by HEAD, refs and every commit with its change (shas alone don't encode the change). */
 const remoteParts = (s: RepoState) => [
-  s.origin && [Object.entries(s.origin.branches).sort(), Object.entries(s.origin.tags).sort()],
+  s.origin && [Object.entries(s.origin.branches).sort(), Object.entries(s.origin.tags).sort(), [...s.origin.protected].sort()],
   Object.entries(s.remoteTracking).sort(),
   Object.entries(s.upstream).sort(),
 ]

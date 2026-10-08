@@ -19,6 +19,7 @@ export function cherryPick(ctx: Ctx, args: string[]) {
       fail(`error: cherry-pick of ${sha} would be empty: that change is already here.`)
     }
     const copy = copyCommit(s, original, headSha(s))
+    ctx.reason = `cherry-pick: ${copy.message}`
     ctx.effect({ type: 'copy', from: sha, to: copy.sha })
     setHead(ctx, copy.sha)
     ctx.info(`[${headName(s)} ${copy.sha}] ${copy.message}`)
