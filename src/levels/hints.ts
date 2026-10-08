@@ -7,6 +7,10 @@ export function toPlayerCommand(state: RepoState, cmd: string): string {
   return cmd.replace(/(?<![\w-])C\d+'*(?=$|[~^.\s])/g, (label) => shaOf.get(label) ?? label)
 }
 
+// Where the player is, for matching against the solution: free bisect steps change nothing in the graph but do
+// move the bisect along.
+const where = (s: RepoState) => stateKey(s) + JSON.stringify([s.bisect, s.bisected])
+
 /** The first `steps` solution steps, as the player would type them from the level's start. */
 export function hintCommands(level: Level, steps: number): string[] {
   const out: string[] = []
@@ -36,9 +40,9 @@ export function planHint(level: Level, current: RepoState, hintsUsed: number): H
   const commands = hintCommands(level, n)
   for (const cmd of commands) states.push(run(states[states.length - 1], cmd).state)
 
-  const here = stateKey(current)
+  const here = where(current)
   for (let j = n - 1; j >= 0; j--) {
-    if (stateKey(states[j]) === here) return { reset: false, commands: [commands[j]], hintsUsed: Math.max(hintsUsed, j + 1) }
+    if (where(states[j]) === here) return { reset: false, commands: [commands[j]], hintsUsed: Math.max(hintsUsed, j + 1) }
   }
   const k = Math.min(hintsUsed + 1, n)
   return { reset: true, commands: commands.slice(0, k), hintsUsed: k }

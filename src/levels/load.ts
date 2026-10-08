@@ -90,6 +90,13 @@ export function parseLevel(path: string, source: string): Level {
     const setupDone = playAll(createRepo(id, { origin: data.origin === true }), setup, 'setup')
     const start = bug ? { ...setupDone, bug } : setupDone
     const target = playAll(start, solution, 'solution')
+    // par counts strokes: a few solution steps (`git bisect start`, the final mark) change nothing in the graph
+    let par = 0
+    solution.reduce((s, cmd) => {
+      const r = run(s, cmd, { labels: true })
+      par += r.changed ? 1 : 0
+      return r.state
+    }, start)
 
     // Catch typos: every ref must exist somewhere, and every change must exist in the start.
     const startLabels = new Set(Object.values(start.commits).map((c) => c.label))
@@ -120,7 +127,7 @@ export function parseLevel(path: string, source: string): Level {
       goal,
       origin: data.origin === true,
       bug,
-      par: solution.length,
+      par,
       start,
       target,
     }

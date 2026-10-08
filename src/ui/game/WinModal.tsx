@@ -4,6 +4,7 @@ import { afterLevel } from '../../levels/progress'
 import { golfResult } from '../../levels/score'
 import { levelName, type Level } from '../../levels/load'
 import { hintCommands } from '../../levels/hints'
+import { run } from '../../engine'
 import { celebrate } from './confetti'
 import type { WinInfo } from './useGame'
 
@@ -83,31 +84,43 @@ export function WinModal({ level, win, next, onRetry, onClose }: Props) {
 
 /** A dropdown comparing the player's commands with the basic par solution. */
 function ParRoute({ level, moves }: { level: Level; moves: string[] }) {
-  const par = hintCommands(level, level.solution.length)
-  const list = (cmds: string[]) => (
-    <ol className="space-y-1">
-      {cmds.map((c, i) => (
-        <li key={i} className="flex gap-2 font-mono text-[12px]">
-          <span className="w-4 shrink-0 text-right text-muted">{i + 1}</span>
-          <span className="break-all">{c}</span>
-        </li>
-      ))}
-    </ol>
-  )
+  // par's free steps (`git bisect start`, the final mark) are listed but not numbered
+  let state = level.start
+  const par = hintCommands(level, level.solution.length).map((cmd) => {
+    const r = run(state, cmd)
+    state = r.state
+    return { cmd, free: !r.changed }
+  })
+  const list = (cmds: { cmd: string; free?: boolean }[]) => {
+    let n = 0
+    return (
+      <ol className="space-y-1">
+        {cmds.map(({ cmd, free }, i) => (
+          <li key={i} className={`flex gap-2 font-mono text-[12px] ${free ? 'text-muted' : ''}`}>
+            <span className="w-4 shrink-0 text-right text-muted">{free ? '·' : ++n}</span>
+            <span className="break-all">
+              {cmd}
+              {free && <span className="ml-1.5 font-sans">(free)</span>}
+            </span>
+          </li>
+        ))}
+      </ol>
+    )
+  }
   return (
     <details className="mt-5 rounded-2xl bg-paper text-left ring-1 ring-line">
       <summary className="cursor-pointer px-4 py-2.5 text-sm font-semibold select-none">How par does it</summary>
       <div className="grid grid-cols-2 gap-4 border-t border-line px-4 py-3">
         <div>
           <div className="mb-2 text-xs font-semibold tracking-wide text-muted uppercase">You · {moves.length}</div>
-          {list(moves)}
+          {list(moves.map((cmd) => ({ cmd })))}
         </div>
         <div>
-          <div className="mb-2 text-xs font-semibold tracking-wide text-muted uppercase">Par · {par.length}</div>
+          <div className="mb-2 text-xs font-semibold tracking-wide text-muted uppercase">Par · {level.par}</div>
           {list(par)}
         </div>
       </div>
-      {moves.length < par.length && (
+      {moves.length < level.par && (
         <p className="border-t border-line px-4 py-2.5 text-xs text-muted">You beat par with a shortcut. Nice.</p>
       )}
     </details>

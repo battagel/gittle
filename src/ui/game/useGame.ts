@@ -67,8 +67,9 @@ export function useGame(level: Level | null) {
         if (input.trim() === 'clear') return { ...g, lines: [] }
         const r = run(g.repo, input)
         const lines = [...g.lines, echo, ...r.output]
-        if (!r.changed) return { ...g, repo: r.state, lines } // free, but may update bookkeeping (`git switch -`)
         const won = level !== null && isSolved(level, r.state)
+        // free, but may update bookkeeping (`git switch -`) or finish a goal (the bisect mark that names the culprit)
+        if (!r.changed) return { ...g, repo: r.state, lines, won }
         return { ...g, repo: r.state, effects: r.effects, lines, strokes: g.strokes + 1, moves: [...g.moves, input.trim()], won }
       })
     },

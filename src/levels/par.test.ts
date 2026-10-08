@@ -7,11 +7,13 @@ import { specialFeature } from './special'
 describe('par', () => {
   it('flags shortcut forms and allows basic ones', () => {
     for (const cmd of ['git switch -c x', 'git checkout -b x', 'git branch -f main C2', 'git rebase main feature',
-      'git rebase --onto C1 C2', 'git cherry-pick C2 C3', 'git cherry-pick C1..C3', 'git revert C1..C3', 'git branch -d a b']) {
+      'git rebase --onto C1 C2', 'git cherry-pick C2 C3', 'git cherry-pick C1..C3', 'git revert C1..C3', 'git branch -d a b',
+      'git bisect run npm test']) {
       expect(specialFeature(cmd), cmd).not.toBeNull()
     }
     for (const cmd of ['git switch x', 'git branch x C2', 'git rebase main', 'git cherry-pick C2', 'git revert -m 1 C5',
-      'git commit -m "a b"', 'git branch -d a', 'git reset --hard HEAD~2', 'git switch -', 'git merge feature']) {
+      'git commit -m "a b"', 'git branch -d a', 'git reset --hard HEAD~2', 'git switch -', 'git merge feature',
+      'git bisect start', 'git bisect good', 'git bisect bad C3', 'git bisect reset']) {
       expect(specialFeature(cmd), cmd).toBeNull()
     }
   })
@@ -31,8 +33,10 @@ describe('par', () => {
       expect(level().solution.map((c) => [c, specialFeature(c)]).filter(([, why]) => why)).toEqual([])
     })
 
-    it('no shorter solution exists with basic commands', () => {
+    it('no shorter solution exists with basic commands', (t) => {
       const l = level()
+      // bisect levels hide the answer behind `npm test`: the search knows it, so any shorter route is a guess
+      if (l.bug) return t.skip()
       const { routes, depth } = search(l, l.par - 1, 1, 300_000, { basic: true })
       expect(routes.map((r) => readable(l, r)), 'a shorter basic route wins: tighten the goal or update the solution').toEqual([])
       expect(depth, 'the search should cover at least 2 strokes').toBeGreaterThanOrEqual(Math.min(2, l.par - 1))

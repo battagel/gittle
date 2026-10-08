@@ -36,16 +36,18 @@ describe('level files', () => {
       expect(isSolved(level, level.start)).toBe(false)
     })
 
-    it('every solution step is a stroke, and the solution wins in par', () => {
+    it('every solution step is a stroke (bar free bisect steps), and the solution wins in par', () => {
       const level = load()
       let state = level.start
+      let strokes = 0
       for (const step of level.solution) {
         const r = run(state, step, { labels: true })
-        expect(r.changed, `"${step}" should change the repo`).toBe(true)
+        if (!step.startsWith('git bisect ')) expect(r.changed, `"${step}" should change the repo`).toBe(true)
+        strokes += r.changed ? 1 : 0
         state = r.state
       }
       expect(evaluate(level, state).filter((c) => !c.ok)).toEqual([])
-      expect(level.par).toBe(level.solution.length)
+      expect(level.par).toBe(strokes)
     })
 
     it('hint commands use shas only and replay to a win', () => {

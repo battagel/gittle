@@ -31,6 +31,9 @@ export function specialFeature(cmd: string): string | null {
     case 'pull':
       if (positional.length > 1) return 'pulls a branch other than your upstream in one command'
       break
+    case 'bisect':
+      if (positional[0] === 'run') return 'runs the whole bisect in one command'
+      break
     case 'cherry-pick':
     case 'revert':
       if (positional.length > 1 || positional.some((p) => p.includes('..'))) return 'takes several commits at once'

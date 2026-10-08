@@ -4,8 +4,10 @@ import { ancestors, canApply, isAncestor, netChanges, parts } from '../engine/gr
 // A level's goal is a list of checks: what the level is about, not one exact graph.
 // Extra work costs strokes, not the win. Changes are matched by change (so copies count), refs by name.
 // Commits are named by their label in the level's start state (C2): that exact original commit.
+// Any check can carry `say:`, its wording in the checklist, so the list doesn't give away the answer
+// ("`main` is back where it was" rather than "`main` points at C3").
 
-export type Check =
+export type Check = (
   | { type: 'head'; branch: string } // a branch name, or "detached"
   | { type: 'points-to'; kind: 'branch' | 'tag' | 'ref'; ref: string; commit: string }
   | { type: 'same'; refs: string[] }
@@ -16,6 +18,9 @@ export type Check =
   | { type: 'linear' | 'merge-commit' | 'unchanged' | 'no-duplicates' | 'absent'; ref: string }
   | { type: 'pushed' | 'in-sync'; ref: string } // a local branch vs origin
   | { type: 'tracks'; branch: string; upstream: string }
+  | { type: 'bisected'; commit: string } // `git bisect` named this commit as the first bad one
+  | { type: 'all'; checks: Check[] } // passes when every check in it does: one line in the checklist
+) & { say?: string }
 
 export interface GoalLevel {
   start: RepoState
@@ -113,6 +118,10 @@ export function passes(level: GoalLevel, state: RepoState, check: Check): boolea
       const ref = t(check.ref)
       return ref !== null && ref === tip(level, level.start, check.ref)
     }
+    case 'bisected':
+      return state.bisected !== null && state.bisected === t(check.commit)
+    case 'all':
+      return check.checks.every((c) => passes(level, state, c))
   }
 }
 
@@ -137,6 +146,7 @@ const list = (items: string[], joiner: string) =>
   items.length === 1 ? items[0] : `${items.slice(0, -1).join(', ')} ${joiner} ${items[items.length - 1]}`
 
 export function describe(check: Check): string {
+  if (check.say) return check.say
   switch (check.type) {
     case 'head':
       return check.branch === 'detached' ? 'HEAD is detached' : `HEAD is on ${name(check.branch)}`
@@ -174,6 +184,10 @@ export function describe(check: Check): string {
       return `${name(check.branch)} tracks \`origin/${check.upstream.replace(/^origin\//, '')}\``
     case 'unchanged':
       return `${name(check.ref)} hasn't moved`
+    case 'bisected':
+      return '`git bisect` has found the first bad commit'
+    case 'all':
+      return check.checks.map(describe).join('; ')
   }
 }
 
@@ -192,13 +206,25 @@ const obj = (v: unknown, what: string): Record<string, unknown> => {
   return v as Record<string, unknown>
 }
 
-/** Parse one YAML goal item, e.g. `{ ahead: { ref: feature, of: main } }`. */
-export function parseCheck(raw: unknown, i: number): Check {
-  const entries = Object.entries(obj(raw, `goal[${i}]`))
+/** Parse one YAML goal item, e.g. `{ ahead: { ref: feature, of: main } }`, optionally with `say: <wording>`. */
+export function parseCheck(raw: unknown, i: number | string): Check {
+  const { say, ...rest } = obj(raw, `goal[${i}]`)
+  const check = parseOne(rest, i)
+  return say === undefined ? check : { ...check, say: str(say, `goal[${i}].say`) }
+}
+
+function parseOne(raw: Record<string, unknown>, i: number | string): Check {
+  const entries = Object.entries(raw)
   if (entries.length !== 1) throw new Error(`goal[${i}] must have exactly one check`)
   const [type, v] = entries[0]
   const at = `goal[${i}].${type}`
   switch (type) {
+    case 'bisected':
+      return { type, commit: str(v, at) }
+    case 'all': {
+      if (!Array.isArray(v) || !v.length) throw new Error(`${at} must be a non-empty list of checks`)
+      return { type, checks: v.map((c, j) => parseCheck(c, `${i}].all[${j}`)) }
+    }
     case 'head':
       return { type, branch: str(v, at) }
     case 'linear':
@@ -276,5 +302,11 @@ export function mentions(check: Check): { refs: string[]; changes: string[] } {
       return { refs: [check.ref], changes: [] }
     case 'tracks':
       return { refs: [check.branch], changes: [] }
+    case 'bisected':
+      return { refs: [check.commit], changes: [] }
+    case 'all': {
+      const each = check.checks.map(mentions)
+      return { refs: each.flatMap((m) => m.refs), changes: each.flatMap((m) => m.changes) }
+    }
   }
 }
