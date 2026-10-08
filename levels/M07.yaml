@@ -1,7 +1,7 @@
 title: Wrong branch
 difficulty: medium
 daily-date: null
-concepts: [branch -f, switch -c]
+concepts: [branch -m, branch, reset]
 
 brief: |
   Dan made the last two commits straight onto `main`, but they were meant for a new branch.
@@ -16,9 +16,8 @@ setup:
   - git commit -m "Finish feature"
 
 solution:
-  - git branch feature
-  - git reset --hard C1
-  - git switch feature
+  - git branch -m main feature
+  - git branch main C1
 
 goal:
   - head: feature
