@@ -1,0 +1,25 @@
+title: Read the history
+difficulty: easy
+daily-date: null
+concepts: [log, show]
+
+brief: |
+  New week, new task. The graph doesn't show commit messages: you read them with `git log`,
+  which lists commits newest first (`git log --oneline` gives one line each). To look at a single commit
+  in detail, including its full sha, use `git show <sha>`. Looking around never costs a stroke.
+
+  Matt wants the commit that added the pricing page marked for the release notes. Find it, and tag it `pricing`.
+
+setup:
+  - git commit -m "Set up project"
+  - git commit -m "Add login page"
+  - git commit -m "Add pricing page"
+  - git commit -m "Fix login typo"
+  - git commit -m "Add yearly pricing plans"
+  - git commit -m "Update footer"
+
+solution:
+  - git tag pricing C3
+
+goal:
+  - points-to: { tag: pricing, commit: C3 }
