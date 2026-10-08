@@ -197,7 +197,9 @@ function LevelCard({ level, progress, nextUp }: { level: Level; progress: Progre
     <Link to={`/play/${level.id}`} className={`${card} flex flex-col ${nextUp ? 'ring-2 ring-indigo' : 'ring-1 ring-line'}`}>
       <div className="flex items-center justify-between">
         <DifficultyChip difficulty={level.difficulty} />
-        {nextUp ? (
+        {level.id === dailyToday?.id ? (
+          <span className="rounded-full bg-amber px-2 py-0.5 text-xs font-bold text-white">Today · ×{DAILY_BONUS}</span>
+        ) : nextUp ? (
           <span className="text-xs font-semibold text-indigo">Next up</span>
         ) : (
           level.daily && <span className="text-xs font-semibold text-amber">Daily · {formatDay(level.daily)}</span>

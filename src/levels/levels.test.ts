@@ -126,11 +126,11 @@ describe('daily challenges', () => {
       `title: t\ndifficulty: pro\ndaily-date: ${date}\nbrief: b\nsolution: ["git commit"]\ngoal: [{ ahead: { ref: main, of: C0 } }]`,
     )
 
-  it('lists past dailies, features today\'s, hides future ones', () => {
+  it('lists past dailies and today\'s, features today\'s, hides future ones', () => {
     const [past, today, future] = ['2026-10-07', '2026-10-08', '2026-10-09'].map(make)
     const { levels, daily } = catalogue([future, today, past], '2026-10-08')
     expect(daily).toBe(today)
-    expect(levels).toEqual([past])
+    expect(levels).toEqual([past, today])
   })
 
   it('must be medium or pro', () => {

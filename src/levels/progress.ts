@@ -9,9 +9,9 @@ export function levelPoints(level: Level, progress: Progress | undefined): numbe
   return Math.max(points(progress.best, level.par), onDay)
 }
 
-/** Total score across every visible level, including today's daily. */
+/** Total score across every listed level (today's daily included). */
 export function totalScore(save: SaveData): number {
-  return [...levels, ...(dailyToday ? [dailyToday] : [])].reduce(
+  return levels.reduce(
     (sum, level) => sum + (levelPoints(level, save.progress[level.key]) ?? 0),
     0,
   )

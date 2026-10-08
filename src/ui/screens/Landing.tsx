@@ -163,7 +163,7 @@ export function Landing() {
 /** Today's daily, with the last few as smaller cards beside it. Widths follow the golden ratio (φ : 1). */
 function DailySection({ progress }: { progress: Record<string, Progress> }) {
   const previous = levels
-    .filter((l) => l.daily)
+    .filter((l) => l.daily && l.id !== dailyToday?.id)
     .sort((a, b) => b.daily!.localeCompare(a.daily!))
     .slice(0, 3)
   if (!dailyToday && !previous.length) return null

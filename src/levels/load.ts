@@ -148,12 +148,12 @@ export function localDate(d = new Date()): string {
 }
 
 /**
- * What a player can see on `today`: past dailies join the normal list, today's is the daily challenge,
- * future ones stay hidden. Levels sort by difficulty, then by the number in their id.
+ * What a player can see on `today`: past dailies and today's are in the normal list (today's is also featured as the
+ * daily challenge), future ones stay hidden. Levels sort by difficulty, then by the number in their id.
  */
 export function catalogue(all: Level[], today: string, revealAll = false) {
   const listed = all
-    .filter((l) => revealAll || l.daily === null || l.daily < today)
+    .filter((l) => revealAll || l.daily === null || l.daily <= today) // today's daily is listed too
     .sort((a, b) => difficulties.indexOf(a.difficulty) - difficulties.indexOf(b.difficulty) || a.order - b.order)
   return { levels: listed, daily: all.find((l) => l.daily === today) ?? null }
 }
