@@ -1,5 +1,6 @@
 import { parse } from 'yaml'
 import { createRepo, run, runServer, type RepoState } from '../engine'
+import { load as loadSave } from '../storage'
 import { mentions, parseCheck, type Check } from './goal'
 
 export type Difficulty = 'easy' | 'medium' | 'pro'
@@ -150,15 +151,17 @@ export function localDate(d = new Date()): string {
  * What a player can see on `today`: past dailies join the normal list, today's is the daily challenge,
  * future ones stay hidden. Levels sort by difficulty, then by the number in their id.
  */
-export function catalogue(all: Level[], today: string) {
+export function catalogue(all: Level[], today: string, revealAll = false) {
   const listed = all
-    .filter((l) => l.daily === null || l.daily < today)
+    .filter((l) => revealAll || l.daily === null || l.daily < today)
     .sort((a, b) => difficulties.indexOf(a.difficulty) - difficulties.indexOf(b.difficulty) || a.order - b.order)
   return { levels: listed, daily: all.find((l) => l.daily === today) ?? null }
 }
 
 const all = loadAll()
-const today = catalogue(all, localDate())
+/** Easter egg (10 clicks on the Levels title): every level is listed and playable, whatever its date. */
+export const revealAll = loadSave().settings.revealAll === true
+const today = catalogue(all, localDate(), revealAll)
 
 /** Levels in the normal list (including past dailies). */
 export const levels: Level[] = today.levels

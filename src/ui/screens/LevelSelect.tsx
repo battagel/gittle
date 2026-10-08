@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
-import { dailyToday, difficulties, levelName, levels, type Difficulty, type Level } from '../../levels/load'
+import { dailyToday, difficulties, levelName, levels, revealAll, type Difficulty, type Level } from '../../levels/load'
 import { formatDay, levelPoints } from '../../levels/progress'
 import { DAILY_BONUS, golfResult } from '../../levels/score'
 import { load, update, type Progress, type SaveData } from '../../storage'
@@ -40,8 +40,21 @@ export function LevelSelect() {
     update((d) => void (d.settings.concepts = next))
   }
 
-  const progress = (l: Level) => save.progress[l.id]
+  const progress = (l: Level) => save.progress[l.key]
   const best = (l: Level) => progress(l)?.best
+
+  // Easter egg: 10 clicks in a row on the title reveals (or hides again) every level, whatever its date.
+  const clicks = useRef({ n: 0, timer: undefined as ReturnType<typeof setTimeout> | undefined })
+  const titleClick = () => {
+    const c = clicks.current
+    clearTimeout(c.timer)
+    if (++c.n < 10) {
+      c.timer = setTimeout(() => (c.n = 0), 2500)
+      return
+    }
+    update((d) => void (d.settings.revealAll = !revealAll))
+    window.location.reload()
+  }
   const visible = (l: Level) =>
     (chosen.length === 0 || chosen.includes(l.difficulty)) &&
     (concepts.length === 0 || l.concepts.some((c) => concepts.includes(c)))
@@ -54,7 +67,14 @@ export function LevelSelect() {
       <TopBar />
       <main className="pt-4">
       <div className="mb-8 flex items-baseline justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Levels</h1>
+        <h1 onClick={titleClick} className="text-3xl font-bold tracking-tight select-none">
+          Levels
+          {revealAll && (
+            <span className="ml-3 rounded-full bg-amber px-2.5 py-0.5 align-middle text-xs font-semibold text-white">
+              all dates revealed
+            </span>
+          )}
+        </h1>
         <span className="text-sm text-muted">
           {solved} / {levels.length} solved
         </span>

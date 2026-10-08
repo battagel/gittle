@@ -146,6 +146,11 @@ describe('daily challenges', () => {
     expect(() => parseLevel('levels/first.yaml', body('difficulty: pro'))).toThrow(/named like E01/)
   })
 
+  it('can reveal every level, future ones included', () => {
+    const [past, today, future] = ['2026-10-07', '2026-10-08', '2026-10-09'].map(make)
+    expect(catalogue([future, today, past], '2026-10-08', true).levels).toEqual([past, today, future])
+  })
+
   it('every daily has its own date', () => {
     const dates = parsed.map((p) => p.level().daily).filter((d) => d !== null)
     expect(new Set(dates).size).toBe(dates.length)
