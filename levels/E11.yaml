@@ -1,0 +1,33 @@
+title: Common ground
+difficulty: easy
+daily-date: null
+concepts: [merge-base]
+
+brief: |
+  Nikita has asked you to review the `checkout` branch. Partway through, `checkout` merged `main` in to
+  stay up to date, so the point where it first branched off is no longer the whole story.
+
+  Before reviewing, you need the *merge base*: the newest commit that both `main` and `checkout` contain.
+  That's what git compares against when it merges the two. `git merge-base main checkout` prints it.
+
+  Tag it `review-base`.
+
+setup:
+  - git commit -m "Set up shop"
+  - git commit -m "Add product list"
+  - git switch -c checkout
+  - git commit -m "Start checkout page"
+  - git switch main
+  - git commit -m "Add search"
+  - git switch checkout
+  - git merge main
+  - git commit -m "Checkout form"
+  - git switch main
+  - git commit -m "Fix search typo"
+
+solution:
+  - git tag review-base C4
+
+goal:
+  - points-to: { tag: review-base, commit: C4 }
+    say: tag `review-base` marks the newest commit both branches contain

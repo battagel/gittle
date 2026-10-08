@@ -1,0 +1,42 @@
+title: Find the bug
+difficulty: easy
+daily-date: null
+concepts: [bisect, npm test]
+bug: C6
+
+brief: |
+  Checkout worked in `v1.0`, and it's broken now. Seven commits have landed since, and Matt wants to know
+  which one broke it.
+
+  `npm test` runs the tests on the commit you're on (try it: it's free). `git bisect` finds the first bad
+  commit by binary search:
+
+  1. `git bisect start`, then `git bisect bad` (the commit you're on is broken) and `git bisect good v1.0`.
+  2. Git checks out a commit halfway between. Run `npm test`, then mark it `git bisect good` or `git bisect bad`.
+  3. Repeat until git names the first bad commit, then `git bisect reset` to go back to `main`.
+
+  Each checkout moves HEAD, so it costs a stroke.
+
+setup:
+  - git commit -m "Release 1.0"
+  - git tag -a v1.0 -m "Version 1.0"
+  - git commit -m "Add gift cards"
+  - git commit -m "Tidy up styles"
+  - git commit -m "Faster product search"
+  - git commit -m "New basket layout"
+  - git commit -m "Update dependencies"
+  - git commit -m "Add order history"
+  - git commit -m "Fix footer links"
+
+solution:
+  - git bisect start
+  - git bisect bad
+  - git bisect good v1.0
+  - git bisect good
+  - git bisect bad
+  - git bisect good
+  - git bisect reset
+
+goal:
+  - bisected: C6
+  - head: main

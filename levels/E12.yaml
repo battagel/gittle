@@ -1,0 +1,46 @@
+title: Is the fix in?
+difficulty: easy
+daily-date: null
+concepts: [branch --contains, merge]
+
+brief: |
+  Nikita fixed a crash on save, and the fix was merged into the release branches. Matt suspects one of
+  them was missed.
+
+  `git branch --contains <sha>` lists every branch whose history includes that commit. Find the fix with
+  `git log`, check which release branch is missing it, and merge the fix into that branch.
+
+setup:
+  - git commit -m "Release 1.0"
+  - git branch release/1.0
+  - git commit -m "Add exports"
+  - git branch release/1.1
+  - git commit -m "Add themes"
+  - git branch release/1.2
+  - git switch -c fix C1
+  - git commit -m "Fix crash on save"
+  - git switch release/1.0
+  - git merge --no-ff fix
+  - git switch release/1.2
+  - git merge fix
+  - git switch main
+  - git merge fix
+  - git branch -d fix
+
+solution:
+  - git switch release/1.1
+  - git merge C4
+
+goal:
+  - all:
+      - merged: { from: C4, into: release/1.0 }
+      - merged: { from: C4, into: release/1.1 }
+      - merged: { from: C4, into: release/1.2 }
+    say: The fix is merged into every release branch
+  - all:
+      - unchanged: release/1.0
+      - unchanged: release/1.2
+      - unchanged: main
+      - on-top-of: { ref: heads/release/1.1, base: C2 }
+      - excludes: { ref: release/1.1, changes: [C3] }
+    say: Every branch keeps its history, and gains nothing but the fix

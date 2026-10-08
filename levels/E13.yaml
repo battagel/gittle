@@ -1,0 +1,33 @@
+title: Back before the reset
+difficulty: easy
+daily-date: null
+concepts: [reflog, "HEAD@{n}"]
+
+brief: |
+  You wanted to look at an old commit, but typed `git reset --hard` instead of `git switch --detach`.
+  `main` has jumped back, and your newest work on it is faded in the graph. So is the `spike` branch you
+  deleted on purpose earlier. Which faded commits were `main`'s?
+
+  `git reflog` lists every move HEAD has made, newest first. `HEAD@{1}` means "where HEAD was one move ago",
+  and works anywhere a sha does.
+
+  Put `main` back exactly where it was before the reset.
+
+setup:
+  - git commit -m "Add login page"
+  - git commit -m "Add sign-up page"
+  - git commit -m "Add profile page"
+  - git switch -c spike C2
+  - git commit -m "Try a new router"
+  - git commit -m "Router experiment"
+  - git switch main
+  - git branch -D spike
+  - git reset --hard C1
+
+solution:
+  - git reset --hard HEAD@{1}
+
+goal:
+  - points-to: { branch: main, commit: C3 }
+    say: "`main` is back where it was before the reset"
+  - head: main
