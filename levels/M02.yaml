@@ -1,0 +1,29 @@
+title: Catch up with main
+difficulty: medium
+daily-date: null
+origin: true
+concepts: [fetch, rebase]
+
+brief: |
+  You branched `feature` a while ago, and `main` has moved on since: Nikita pushed an upgrade to
+  origin (C4) that your laptop hasn't seen yet.
+
+  Replay your work on top of the latest `main` from origin, so `feature` is one straight line with no merge commits.
+  Watch the shas: rebased commits are *copies* (`C2'`), not the originals.
+
+setup:
+  - git commit
+  - git push
+  - git switch -c feature
+  - git commit -m "Add profile page"
+  - git commit -m "Add avatar upload"
+  - server: commit main -m "Upgrade dependencies"
+
+solution:
+  - git fetch
+  - git rebase origin/main
+
+goal:
+  - on-top-of: { ref: feature, base: C4 }
+  - contains: { ref: feature, changes: [C2, C3, C4] }
+  - linear: feature

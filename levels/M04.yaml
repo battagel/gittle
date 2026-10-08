@@ -1,0 +1,23 @@
+title: Oops, go back
+difficulty: medium
+daily-date: null
+concepts: [reset]
+
+brief: |
+  The last two commits on `main` were mistakes. Luckily you haven't pushed them:
+  `origin/main` still points at C1, where `main` is on origin.
+
+  Move `main` back so they're no longer part of its history.
+  (They won't vanish: look for them, faded, in the graph.)
+
+setup:
+  - git commit -m "Add login form"
+  - git commit -m "Oops"
+  - git commit -m "Oops again"
+
+solution:
+  - git reset --hard HEAD~2
+
+goal:
+  - excludes: { ref: main, changes: [C2, C3] }
+  - contains: { ref: main, changes: [C1] }

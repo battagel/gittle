@@ -1,0 +1,29 @@
+title: Two roads meet
+difficulty: medium
+daily-date: null
+concepts: [merge]
+
+brief: |
+  `main` and `feature` have both moved on since they split at `C1`.
+
+  Merge `feature` into `main`. Because both sides have new work, git can't just slide `main` forward:
+  it makes a *merge commit* with two parents.
+
+setup:
+  - git commit
+  - git switch -c feature
+  - git commit -m "Add search box"
+  - git commit -m "Style search results"
+  - git switch main
+  - git commit -m "Update README"
+  - git switch feature
+
+solution:
+  - git switch main
+  - git merge feature
+
+goal:
+  - merged: { from: feature, into: main }
+  - merged: { from: C4, into: main }
+  - merge-commit: main
+  - no-duplicates: main

@@ -1,0 +1,25 @@
+title: Just that fix
+difficulty: medium
+daily-date: null
+concepts: [cherry-pick]
+
+brief: |
+  `feature` contains a crash fix (`C3`) that `main` needs right now,
+  but the rest of `feature` isn't ready to ship.
+
+  Copy *just* the fix onto `main`.
+
+setup:
+  - git commit
+  - git switch -c feature
+  - git commit -m "Start new checkout flow"
+  - git commit -m "Fix crash on empty cart"
+  - git commit -m "WIP checkout styling"
+  - git switch main
+
+solution:
+  - git cherry-pick C3
+
+goal:
+  - applied: { ref: main, changes: [C3] }
+  - excludes: { ref: main, changes: [C2, C4] }

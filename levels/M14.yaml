@@ -1,0 +1,36 @@
+title: One after another
+difficulty: medium
+daily-date: null
+origin: true
+concepts: [fetch, rebase, push --force-with-lease]
+
+brief: |
+  Your `feature-1` was approved and merged into `main` on origin through a pull request (C6).
+  Your `feature-2` (C4, C5) was branched from `main` before that, and Matt wants it reviewed next.
+
+  The team rebases before review: put `feature-2` on top of the latest `main` from origin, and update it on origin.
+
+setup:
+  - git commit -m "Initial app"
+  - git push
+  - git switch -c feature-1
+  - git commit -m "Add login form"
+  - git commit -m "Login validation"
+  - git push -u origin feature-1
+  - git switch -c feature-2 main
+  - git commit -m "Add profile page"
+  - git commit -m "Profile avatar"
+  - git push -u origin feature-2
+  - server: merge feature-1 into main
+
+solution:
+  - git fetch
+  - git rebase origin/main
+  - git push --force-with-lease
+
+goal:
+  - on-top-of: { ref: origin:feature-2, base: C6 }
+  - contains: { ref: origin:feature-2, changes: [C4, C5] }
+  - ahead: { ref: origin:feature-2, of: C6, by: 2 }
+  - in-sync: feature-2
+  - points-to: { ref: origin:main, commit: C6 }

@@ -1,0 +1,27 @@
+title: Fetch first
+difficulty: medium
+daily-date: null
+origin: true
+concepts: [push, pull --rebase]
+
+brief: |
+  You committed a footer fix on `main` (C3), but `git push` is rejected: Nikita pushed to `main` (C2)
+  since you last fetched.
+
+  Get your commit onto origin's `main`. The team keeps `main` linear: no merge commits.
+
+setup:
+  - git commit -m "Initial app"
+  - git push
+  - server: commit main -m "Fix typo in header"
+  - git commit -m "Fix footer links"
+
+solution:
+  - git pull --rebase
+  - git push
+
+goal:
+  - in-sync: main
+  - applied: { ref: origin:main, changes: [C2, C3] }
+  - linear: origin:main
+  - on-top-of: { ref: origin:main, base: C2 }

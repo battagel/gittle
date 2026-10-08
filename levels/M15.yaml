@@ -1,0 +1,27 @@
+title: Divergent main
+difficulty: medium
+daily-date: null
+origin: true
+concepts: [pull --no-rebase, merge]
+
+brief: |
+  You and Nikita both committed to `main`: yours (C3) is only on your laptop, and Nikita's (C2) is on origin.
+  This team records diverging work with a merge commit, and never rewrites `main`.
+
+  Bring Nikita's work into your `main` with a merge, and push the result.
+
+setup:
+  - git commit -m "Initial app"
+  - git push
+  - server: commit main -m "Update dependencies"
+  - git commit -m "Add settings page"
+
+solution:
+  - git pull --no-rebase
+  - git push
+
+goal:
+  - merge-commit: origin:main
+  - merged: { from: C2, into: origin:main }
+  - merged: { from: C3, into: origin:main }
+  - in-sync: main

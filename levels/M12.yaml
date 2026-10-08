@@ -1,0 +1,27 @@
+title: Merge the stack
+difficulty: medium
+daily-date: 2026-10-06
+concepts: [merge, stacks]
+
+brief: |
+  Nikita's work is a stack: `ui` is built on top of `api`. Matt has approved both.
+
+  Get both into `main` with a single merge commit.
+
+setup:
+  - git commit -m "Initial app"
+  - git switch -c api
+  - git commit -m "Add API client"
+  - git switch -c ui
+  - git commit -m "Use API in UI"
+  - git switch main
+  - git commit -m "Update README"
+
+solution:
+  - git merge ui
+
+goal:
+  - merged: { from: C2, into: main }
+  - merged: { from: C3, into: main }
+  - merge-commit: main
+  - on-top-of: { ref: main, base: C4 }

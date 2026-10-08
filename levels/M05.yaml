@@ -1,0 +1,23 @@
+title: Undo in public
+difficulty: medium
+daily-date: null
+concepts: [revert]
+
+brief: |
+  `C2` ("Add dark mode") broke the build. But `main` is already on origin and the whole team has pulled it,
+  so rewriting its history is off the table: everyone else has `C2` and `C3` too.
+
+  Undo `C2` with a *new* commit on top instead, keeping `C3`, and push it.
+
+setup:
+  - git commit
+  - git commit -m "Add dark mode"
+  - git commit -m "Add footer"
+
+solution:
+  - git revert C2
+
+goal:
+  - on-top-of: { ref: main, base: C3 }
+  - not-applied: { ref: main, changes: [C2] }
+  - applied: { ref: main, changes: [C0, C1, C3] }

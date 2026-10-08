@@ -1,0 +1,26 @@
+title: Cherry on top
+difficulty: medium
+daily-date: 2026-10-07
+concepts: [cherry-pick]
+
+brief: |
+  `feature` has three commits. `main` wants the two fixes (`C2` and `C4`),
+  but not the experiment in between (`C3`).
+
+  Tip: `git cherry-pick` takes more than one commit.
+
+setup:
+  - git commit
+  - git switch -c feature
+  - git commit -m "Fix date parsing"
+  - 'git commit -m "Experiment: new parser"'
+  - git commit -m "Fix timezone offset"
+  - git switch main
+
+solution:
+  - git cherry-pick C2
+  - git cherry-pick C4
+
+goal:
+  - applied: { ref: main, changes: [C2, C4] }
+  - excludes: { ref: main, changes: [C3] }

@@ -1,0 +1,26 @@
+title: Wrong branch
+difficulty: medium
+daily-date: null
+concepts: [branch -f, switch -c]
+
+brief: |
+  Dan made the last two commits straight onto `main`, but they were meant for a new branch.
+  Matt wants it sorted out before anyone else builds on `main`.
+
+  Put Dan's commits on a branch called `feature` (and have it checked out),
+  and move `main` back to `C1`, where it was before.
+
+setup:
+  - git commit
+  - git commit -m "Start feature"
+  - git commit -m "Finish feature"
+
+solution:
+  - git branch feature
+  - git reset --hard C1
+  - git switch feature
+
+goal:
+  - head: feature
+  - contains: { ref: feature, changes: [C2, C3] }
+  - points-to: { branch: main, commit: C1 }

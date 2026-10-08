@@ -1,0 +1,35 @@
+title: Straighten it out
+difficulty: medium
+daily-date: null
+concepts: [rebase, merge commits]
+
+brief: |
+  Dan kept `feature` up to date by merging `main` into it, and now its history is a tangle.
+  Matt won't merge it like that.
+
+  Rewrite `feature` as a straight line of its own commits on top of the latest `main`,
+  with no merge commits, then point `main` at that same commit too.
+
+setup:
+  - git commit
+  - git switch -c feature
+  - git commit -m "Add charts"
+  - git switch main
+  - git commit -m "Fix typo"
+  - git switch feature
+  - git merge main
+  - git commit -m "Add chart legend"
+  - git switch main
+  - git commit -m "Bump version"
+
+solution:
+  - git switch feature
+  - git rebase main
+  - git switch main
+  - git merge feature
+
+goal:
+  - on-top-of: { ref: feature, base: C6 }
+  - contains: { ref: feature, changes: [C2, C5] }
+  - linear: feature
+  - same: [main, feature]

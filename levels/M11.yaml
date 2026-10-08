@@ -1,0 +1,27 @@
+title: Lost and found
+difficulty: medium
+daily-date: null
+concepts: [detached HEAD, sha]
+
+brief: |
+  Dan made a great commit (`C2`) in *detached HEAD* state, switched back to `main`,
+  and now thinks it's lost.
+
+  No branch points at it any more, so it's faded in the graph. But it isn't gone.
+  Give it a branch called `rescue`, and bring it into `main`.
+
+  Tip: click the faded commit to copy its sha.
+
+setup:
+  - git commit
+  - git checkout C1
+  - git commit -m "Experiment that worked"
+  - git switch main
+
+solution:
+  - git branch rescue C2
+  - git merge rescue
+
+goal:
+  - points-to: { branch: rescue, commit: C2 }
+  - merged: { from: C2, into: main }
