@@ -33,7 +33,7 @@ const tiers: Record<Difficulty, { title: string; text: string }> = {
 export function Landing() {
   const progress = load().progress
   const isNew = Object.keys(progress).length === 0
-  const next = levels.find((l) => !progress[l.id])
+  const next = levels.find((l) => !progress[l.key])
   const first = getLevel('E01')
 
   return (
@@ -128,8 +128,8 @@ export function Landing() {
           <div className="mt-8 grid grid-cols-3 gap-4">
             {difficulties.map((d) => {
               const group = levels.filter((l) => l.difficulty === d)
-              const start = group.find((l) => !progress[l.id]) ?? group[0]
-              const solved = group.filter((l) => progress[l.id]).length
+              const start = group.find((l) => !progress[l.key]) ?? group[0]
+              const solved = group.filter((l) => progress[l.key]).length
               return (
                 <Link
                   key={d}
@@ -189,9 +189,9 @@ function DailySection({ progress }: { progress: Record<string, Progress> }) {
           </div>
           <div className="mt-6 flex items-center justify-between">
             <span className="text-sm text-muted">Par {dailyToday.par}</span>
-            {progress[dailyToday.id] ? (
+            {progress[dailyToday.key] ? (
               <span className="rounded-full bg-paper px-3 py-1 text-sm font-semibold ring-1 ring-line">
-                {golfResult(progress[dailyToday.id].best, dailyToday.par)} · {levelPoints(dailyToday, progress[dailyToday.id])}
+                {golfResult(progress[dailyToday.key].best, dailyToday.par)} · {levelPoints(dailyToday, progress[dailyToday.key])}
               </span>
             ) : (
               <span className="rounded-full bg-amber px-5 py-2.5 font-semibold text-white">Play today's →</span>
@@ -218,7 +218,7 @@ function DailySection({ progress }: { progress: Record<string, Progress> }) {
             <div className="flex shrink-0 flex-col items-end gap-1">
               <DifficultyChip difficulty={l.difficulty} />
               <span className="text-xs text-muted">
-                {progress[l.id] ? `${golfResult(progress[l.id].best, l.par)} · ${levelPoints(l, progress[l.id])}` : 'Not played'}
+                {progress[l.key] ? `${golfResult(progress[l.key].best, l.par)} · ${levelPoints(l, progress[l.key])}` : 'Not played'}
               </span>
             </div>
           </Link>

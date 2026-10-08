@@ -81,10 +81,10 @@ export function useGame(level: Level | null) {
   useEffect(() => {
     if (!game.won || !level) return
     if (recorded.current?.resets !== game.resets) {
-      const before = load().progress[level.id]
+      const before = load().progress[level.key]
       const bonus = level.daily === localDate()
       update((d) => {
-        d.progress[level.id] = {
+        d.progress[level.key] = {
           best: Math.min(game.strokes, before?.best ?? Infinity),
           dayBest: bonus ? Math.min(game.strokes, before?.dayBest ?? Infinity) : before?.dayBest,
           completedAt: new Date().toISOString(),

@@ -3,12 +3,23 @@ import { createRepo, run } from '../engine'
 import { evaluate, isSolved, parseCheck } from './goal'
 import { hintCommands, planHint } from './hints'
 import { levelPoints } from './progress'
+import { migrate } from '../storage'
 import { catalogue, getLevel, hintsAllowed, levelFiles, parseLevel, playAll } from './load'
 
 const parsed = Object.entries(levelFiles).map(([path, source]) => ({ path, level: () => parseLevel(path, source) }))
 
 describe('level files', () => {
   it('exist', () => expect(parsed.length).toBeGreaterThan(0))
+
+  it('have unique titles, since progress is saved by a key from the title', () => {
+    const keys = parsed.map((p) => p.level().key)
+    expect(new Set(keys).size).toBe(keys.length)
+  })
+
+  it('move old id-keyed progress to the stable keys', () => {
+    const data = migrate({ version: 1, settings: {}, progress: { E01: { best: 1, completedAt: '' }, 'other-key': { best: 2, completedAt: '' } } })
+    expect(Object.keys(data.progress).sort()).toEqual(['other-key', 'your-first-commit'])
+  })
 
   it('have unique ids', () => {
     const ids = parsed.map((p) => p.level().id)
@@ -143,7 +154,7 @@ describe('daily challenges', () => {
 
 describe('hints', () => {
   it('are off for a daily on its own day only', () => {
-    const daily = getLevel('P09')!
+    const daily = getLevel('P11')!
     expect(hintsAllowed(daily, daily.daily!)).toBe(false)
     expect(hintsAllowed(daily, '2099-01-01')).toBe(true)
     expect(hintsAllowed(getLevel('E01')!, daily.daily!)).toBe(true)

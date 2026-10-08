@@ -1,6 +1,8 @@
 // Everything gittle remembers lives under one versioned localStorage key (docs/architecture.md#storage).
 // Every access is guarded: the game must work when storage is blocked, just without saving.
 
+import { legacyIds } from './levels/legacy'
+
 const KEY = 'gittle:v1'
 
 export interface Progress {
@@ -11,7 +13,7 @@ export interface Progress {
 
 export interface SaveData {
   version: 1
-  progress: Record<string, Progress>
+  progress: Record<string, Progress> // by level key (see Level.key)
   settings: {
     difficulties?: ('easy' | 'medium' | 'pro')[] // level-select filter; empty = all
     concepts?: string[] // level-select filter; empty = all
@@ -26,10 +28,21 @@ export function load(): SaveData {
   try {
     const raw = localStorage.getItem(KEY)
     const data = raw ? (JSON.parse(raw) as SaveData) : null
-    return data?.version === 1 ? data : empty()
+    return data?.version === 1 ? migrate(data) : empty()
   } catch {
     return empty()
   }
+}
+
+/** Progress saved under old level ids (E01…) moves to the level's stable key. */
+export function migrate(data: SaveData): SaveData {
+  for (const [id, entry] of Object.entries(data.progress)) {
+    const key = legacyIds[id]
+    if (key === undefined) continue
+    if (!data.progress[key]) data.progress[key] = entry
+    delete data.progress[id]
+  }
+  return data
 }
 
 export function update(fn: (data: SaveData) => void) {

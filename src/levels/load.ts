@@ -7,7 +7,8 @@ export const difficulties: Difficulty[] = ['easy', 'medium', 'pro']
 const prefix: Record<Difficulty, string> = { easy: 'E', medium: 'M', pro: 'P' }
 
 export interface Level {
-  id: string // the filename: levels/E01.yaml -> "E01" (E/M/P + number)
+  id: string // the filename: levels/E01.yaml -> "E01" (E/M/P + number). May change when levels are renumbered
+  key: string // stable, from the title ("Merge the stack" -> "merge-the-stack"): what progress is saved under
   order: number // the number in the id
   daily: string | null // `daily-date`: "2026-10-08" for a daily challenge, null otherwise
   title: string
@@ -102,6 +103,7 @@ export function parseLevel(path: string, source: string): Level {
 
     return {
       id,
+      key: levelKey(title),
       order: Number(number),
       daily: date,
       title,
@@ -162,6 +164,14 @@ const today = catalogue(all, localDate())
 export const levels: Level[] = today.levels
 /** Today's daily challenge, if there is one. */
 export const dailyToday: Level | null = today.daily
+
+/** A level's stable key, from its title. Titles must therefore be unique and never change once released. */
+export function levelKey(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+}
 
 /** How a level is named everywhere in the UI: "E01 · Your first commit". */
 export const levelName = (level: Pick<Level, 'id' | 'title'>) => `${level.id} · ${level.title}`

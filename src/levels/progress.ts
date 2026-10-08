@@ -12,7 +12,7 @@ export function levelPoints(level: Level, progress: Progress | undefined): numbe
 /** Total score across every visible level, including today's daily. */
 export function totalScore(save: SaveData): number {
   return [...levels, ...(dailyToday ? [dailyToday] : [])].reduce(
-    (sum, level) => sum + (levelPoints(level, save.progress[level.id]) ?? 0),
+    (sum, level) => sum + (levelPoints(level, save.progress[level.key]) ?? 0),
     0,
   )
 }
