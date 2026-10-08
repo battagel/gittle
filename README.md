@@ -33,4 +33,4 @@ commands (which sets par), a brief, and a goal made of checks. Daily challenges 
 Every push to `main` runs the tests, builds, and deploys to GitHub Pages
 (`.github/workflows/deploy.yml`). In the repository settings, set **Pages → Source** to **GitHub Actions**.
 
-© Matthew Battagel. All rights reserved.
+© Matthew Battagel. [MIT licence](LICENSE).

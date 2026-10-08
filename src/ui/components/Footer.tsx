@@ -41,7 +41,7 @@ export function Footer() {
           </ul>
         </div>
       </div>
-      <div className="mt-10 text-xs">© {new Date().getFullYear()} Matthew Battagel. All rights reserved.</div>
+      <div className="mt-10 text-xs">© {new Date().getFullYear()} Matthew Battagel · MIT licence</div>
     </footer>
   )
 }
