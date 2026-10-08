@@ -1,0 +1,28 @@
+title: Fix forward
+difficulty: pro
+daily-date: 2026-10-05
+concepts: [release branches, merge]
+
+brief: |
+  Customers on 3.2 can't reset their passwords. The bug is Dan's.
+
+  Matt wants it fixed on `release/3.2` with one commit, then `release/3.2` merged back into `main`
+  so the fix isn't lost in 3.3. `main`'s history must stay as it is.
+
+setup:
+  - git commit -m "Release 3.2"
+  - git branch release/3.2
+  - git commit -m "Start 3.3 features"
+  - git commit -m "More 3.3 features"
+
+solution:
+  - git switch release/3.2
+  - git commit -m "Fix password reset"
+  - git switch main
+  - git merge release/3.2
+
+goal:
+  - ahead: { ref: release/3.2, of: C1, by: 1 }
+  - excludes: { ref: release/3.2, changes: [C2, C3] }
+  - merged: { from: release/3.2, into: main }
+  - on-top-of: { ref: main, base: C3 }

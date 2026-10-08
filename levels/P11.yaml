@@ -1,0 +1,39 @@
+title: Lease, not force
+difficulty: pro
+daily-date: null
+origin: true
+concepts: [push --force-with-lease, fetch, cherry-pick]
+
+brief: |
+  Dan rebased the shared `feature` branch onto the latest `main` (C4) and is about to force-push it.
+  What Dan hasn't seen: Nikita pushed a typo fix to `feature` on origin an hour ago (C5).
+
+  Matt wants `feature` on origin rebased onto `main` as one straight line, *with* Nikita's fix.
+  Update it without losing anyone's work.
+
+setup:
+  - git commit -m "Initial app"
+  - git push
+  - git switch -c feature
+  - git commit -m "Add search"
+  - git commit -m "Search filters"
+  - git push -u origin feature
+  - git switch main
+  - git commit -m "Security patch"
+  - git push
+  - git switch feature
+  - git rebase main
+  - server: commit feature -m "Fix typo in search"
+
+solution:
+  - git fetch
+  - git cherry-pick C5
+  - git push --force-with-lease
+
+goal:
+  - on-top-of: { ref: origin:feature, base: C4 }
+  - applied: { ref: origin:feature, changes: [C2, C3, C5] }
+  - linear: origin:feature
+  - no-duplicates: origin:feature
+  - in-sync: feature
+  - points-to: { ref: origin:main, commit: C4 }

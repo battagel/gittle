@@ -1,0 +1,31 @@
+title: Keys in the history
+difficulty: pro
+daily-date: null
+concepts: [rebase --onto]
+
+brief: |
+  Dan committed real API keys in the middle of `onboarding` (C3). The branch hasn't been shared
+  yet, and a revert would leave the keys sitting in the history.
+
+  Matt wants C3 gone from `onboarding` entirely. Remove it, keeping the rest
+  of Dan's work (C2, C4, C5) as a straight line.
+
+setup:
+  - git commit -m "Initial app"
+  - git switch -c onboarding
+  - git commit -m "Add welcome screen"
+  - git commit -m "Add API keys for testing"
+  - git commit -m "Add tutorial steps"
+  - git commit -m "Add progress bar"
+
+solution:
+  - git reset --hard C2
+  - git cherry-pick C4
+  - git cherry-pick C5
+
+goal:
+  - excludes: { ref: onboarding, changes: [C3] }
+  - contains: { ref: onboarding, changes: [C2, C4, C5] }
+  - on-top-of: { ref: onboarding, base: C2 }
+  - linear: onboarding
+  - unchanged: main

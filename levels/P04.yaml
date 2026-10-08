@@ -1,0 +1,34 @@
+title: Backport
+difficulty: pro
+daily-date: null
+concepts: [cherry-pick A..B, tag]
+
+brief: |
+  Customers on 1.x are hitting three bugs that Nikita has already fixed on `main`
+  (C3, C4 and C5, one after another). Dan's new features (C2, C6) must not go anywhere near 1.x.
+
+  Matt wants a 1.0.1 release. Put the three fixes on `release/1.x`, and tag the result `v1.0.1`.
+
+setup:
+  - git commit -m "Release 1.0"
+  - git tag v1.0
+  - git branch release/1.x
+  - git commit -m "New dashboard"
+  - git commit -m "Fix login timeout"
+  - git commit -m "Fix password reset email"
+  - git commit -m "Fix session leak"
+  - git commit -m "New reports page"
+
+solution:
+  - git switch release/1.x
+  - git cherry-pick C3
+  - git cherry-pick C4
+  - git cherry-pick C5
+  - git tag v1.0.1
+
+goal:
+  - applied: { ref: release/1.x, changes: [C0, C1, C3, C4, C5] }
+  - excludes: { ref: release/1.x, changes: [C2, C6] }
+  - on-top-of: { ref: release/1.x, base: C1 }
+  - same: [release/1.x, tags/v1.0.1]
+  - unchanged: main

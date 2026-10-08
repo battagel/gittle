@@ -1,0 +1,34 @@
+title: Mixed-up commits
+difficulty: pro
+daily-date: null
+concepts: [rebase --onto, branch -f]
+
+brief: |
+  Dan accidentally made two wishlist commits (C4, C5) on top of Nikita's `nikita/cart` branch.
+
+  Matt wants them moved to a new branch, `dan/wishlist`, on top of the latest `main`,
+  and `nikita/cart` back to just Nikita's work (ending at C3).
+
+setup:
+  - git commit -m "Initial app"
+  - git switch -c nikita/cart
+  - git commit -m "Add cart page"
+  - git commit -m "Add cart totals"
+  - git commit -m "Add wishlist model"
+  - git commit -m "Add wishlist page"
+  - git switch main
+  - git commit -m "Update dependencies"
+  - git switch nikita/cart
+
+solution:
+  - git reset --hard C3
+  - git branch dan/wishlist main
+  - git switch dan/wishlist
+  - git cherry-pick C4
+  - git cherry-pick C5
+
+goal:
+  - on-top-of: { ref: dan/wishlist, base: C6 }
+  - applied: { ref: dan/wishlist, changes: [C4, C5] }
+  - excludes: { ref: dan/wishlist, changes: [C2, C3] }
+  - points-to: { branch: nikita/cart, commit: C3 }

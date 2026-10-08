@@ -1,0 +1,39 @@
+title: Split the PR
+difficulty: pro
+daily-date: null
+concepts: [cherry-pick, switch -c]
+
+brief: |
+  Dan opened one giant pull request, `big-pr`, mixing two features: OAuth (C2, C4) and
+  invoices (C3, C5), all interleaved.
+
+  Matt has rejected it. Split it into two branches, `auth` and `billing`,
+  each on top of the latest `main` with only its own commits.
+
+setup:
+  - git commit -m "Initial app"
+  - git switch -c big-pr
+  - git commit -m "Add OAuth login"
+  - git commit -m "Add invoice model"
+  - git commit -m "Add OAuth logout"
+  - git commit -m "Add invoice emails"
+  - git switch main
+  - git commit -m "Update CI"
+
+solution:
+  - git branch auth
+  - git switch auth
+  - git cherry-pick C2
+  - git cherry-pick C4
+  - git branch billing main
+  - git switch billing
+  - git cherry-pick C3
+  - git cherry-pick C5
+
+goal:
+  - on-top-of: { ref: auth, base: C6 }
+  - applied: { ref: auth, changes: [C2, C4] }
+  - excludes: { ref: auth, changes: [C3, C5] }
+  - on-top-of: { ref: billing, base: C6 }
+  - applied: { ref: billing, changes: [C3, C5] }
+  - excludes: { ref: billing, changes: [C2, C4] }

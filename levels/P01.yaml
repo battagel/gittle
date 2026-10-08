@@ -1,0 +1,35 @@
+title: Revert the revert
+difficulty: pro
+daily-date: null
+concepts: [revert -m, revert, merge]
+
+brief: |
+  Dan's `payments` branch was merged into `main` (C5) and immediately started double-charging
+  customers, so Matt had the merge reverted (C6). Dan has since fixed the bug on `payments` (C7).
+
+  Dan tried `git merge payments` to bring it back, and only the fix came through.
+  `main` is shared, so its history can't be rewritten.
+
+  Get *all* of payments (C2, C3 and the fix) back into `main`, with `payments` properly merged.
+
+setup:
+  - git commit -m "Set up checkout"
+  - git switch -c payments
+  - git commit -m "Add card payments"
+  - git commit -m "Add payment receipts"
+  - git switch main
+  - git commit -m "Update pricing page"
+  - git merge payments
+  - git revert -m 1 C5
+  - git switch payments
+  - git commit -m "Fix double charging"
+  - git switch main
+
+solution:
+  - git revert C6
+  - git merge payments
+
+goal:
+  - applied: { ref: main, changes: [C0, C1, C2, C3, C4, C7] }
+  - merged: { from: C7, into: main }
+  - on-top-of: { ref: main, base: C6 }

@@ -1,0 +1,35 @@
+title: Wrong base
+difficulty: pro
+daily-date: null
+concepts: [rebase --onto]
+
+brief: |
+  Dan started `search` while still on the `experiment` branch, so it's built on two GraphQL
+  commits (C2, C3) that are never going to ship.
+
+  Matt wants `search` ready for review: just Dan's two search commits (C4, C5),
+  on top of the latest `main`. Leave `main` and `experiment` as they are.
+
+setup:
+  - git commit -m "Initial app"
+  - git switch -c experiment
+  - git commit -m "Try a GraphQL API"
+  - git commit -m "GraphQL schema draft"
+  - git switch -c search
+  - git commit -m "Add search endpoint"
+  - git commit -m "Add search UI"
+  - git switch main
+  - git commit -m "Security patch"
+  - git switch search
+
+solution:
+  - git reset --hard main
+  - git cherry-pick C4
+  - git cherry-pick C5
+
+goal:
+  - on-top-of: { ref: search, base: C6 }
+  - contains: { ref: search, changes: [C4, C5] }
+  - excludes: { ref: search, changes: [C2, C3] }
+  - unchanged: main
+  - unchanged: experiment

@@ -1,0 +1,29 @@
+title: One revert
+difficulty: pro
+daily-date: null
+concepts: [revert -m]
+
+brief: |
+  Dan merged the `redesign` branch into `main` (C5) and it broke the site on mobile.
+  Since then, Nikita's analytics (C6) have landed on top.
+
+  `main` is shared, so Matt wants the whole redesign undone with *a single* new commit,
+  keeping Nikita's work and everything else.
+
+setup:
+  - git commit -m "Initial app"
+  - git switch -c redesign
+  - git commit -m "New header"
+  - git commit -m "New footer"
+  - git switch main
+  - git commit -m "Fix typo"
+  - git merge redesign
+  - git commit -m "Add analytics"
+
+solution:
+  - git revert -m 1 C5
+
+goal:
+  - not-applied: { ref: main, changes: [C2, C3] }
+  - applied: { ref: main, changes: [C1, C4, C6] }
+  - ahead: { ref: main, of: C6, by: 1 }

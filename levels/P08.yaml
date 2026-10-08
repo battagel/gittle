@@ -1,0 +1,32 @@
+title: Hotfix from production
+difficulty: pro
+daily-date: null
+concepts: [tag, switch -c, merge]
+
+brief: |
+  Production runs `v2.0`, but `main` already has Dan's unfinished billing work (C2, C3) on top.
+  A crash has just been reported in production.
+
+  Matt wants a hotfix release: a branch called `hotfix` from `v2.0` with one commit for the fix,
+  tagged `v2.0.1`, and the fix merged into `main` too, without rewriting `main`'s history.
+
+setup:
+  - git commit -m "Release 2.0"
+  - git tag v2.0
+  - git commit -m "Start new billing"
+  - git commit -m "Billing WIP"
+
+solution:
+  - git branch hotfix v2.0
+  - git switch hotfix
+  - git commit -m "Fix crash on startup"
+  - git tag v2.0.1
+  - git switch main
+  - git merge hotfix
+
+goal:
+  - ahead: { ref: hotfix, of: tags/v2.0, by: 1 }
+  - excludes: { ref: hotfix, changes: [C2, C3] }
+  - same: [hotfix, tags/v2.0.1]
+  - merged: { from: tags/v2.0.1, into: main }
+  - on-top-of: { ref: main, base: C3 }
