@@ -13,6 +13,7 @@ interface GameState {
   effects: Effect[]
   lines: TermLine[]
   strokes: number
+  moves: string[] // the commands that cost a stroke, in order (shown after a win)
   resets: number // bumps on reset so the graph redraws instantly instead of animating
   won: boolean
 }
@@ -22,6 +23,7 @@ export interface WinInfo {
   previousBest: number | null
   points: number // earned by this run, including any daily bonus
   bonus: boolean // a daily solved on its own day
+  moves: string[]
 }
 
 const welcome: TermLine[] = [{ kind: 'hint', text: 'Type git commands here. `help` lists what gittle understands.' }]
@@ -40,6 +42,7 @@ export function useGame(level: Level | null) {
       effects: [],
       lines: welcome,
       strokes: 0,
+      moves: [],
       resets,
       won: false,
     }),
@@ -66,7 +69,7 @@ export function useGame(level: Level | null) {
         const lines = [...g.lines, echo, ...r.output]
         if (!r.changed) return { ...g, repo: r.state, lines } // free, but may update bookkeeping (`git switch -`)
         const won = level !== null && isSolved(level, r.state)
-        return { ...g, repo: r.state, effects: r.effects, lines, strokes: g.strokes + 1, won }
+        return { ...g, repo: r.state, effects: r.effects, lines, strokes: g.strokes + 1, moves: [...g.moves, input.trim()], won }
       })
     },
     [level],
@@ -91,7 +94,7 @@ export function useGame(level: Level | null) {
       const earned = points(game.strokes, level.par) * (bonus ? DAILY_BONUS : 1)
       recorded.current = {
         resets: game.resets,
-        info: { strokes: game.strokes, previousBest: before?.best ?? null, points: earned, bonus },
+        info: { strokes: game.strokes, previousBest: before?.best ?? null, points: earned, bonus, moves: game.moves },
         shown: false,
       }
     }
@@ -102,7 +105,7 @@ export function useGame(level: Level | null) {
       setWin(current.info)
     }, 700) // let the last animation land
     return () => clearTimeout(t)
-  }, [game.won, game.strokes, game.resets, level])
+  }, [game.won, game.strokes, game.resets, game.moves, level])
 
   const reset = useCallback(() => {
     replay.current++

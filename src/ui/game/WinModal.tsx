@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { afterLevel } from '../../levels/progress'
 import { golfResult } from '../../levels/score'
 import { levelName, type Level } from '../../levels/load'
+import { hintCommands } from '../../levels/hints'
 import { celebrate } from './confetti'
 import type { WinInfo } from './useGame'
 
@@ -34,7 +35,7 @@ export function WinModal({ level, win, next, onRetry, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-10 grid place-items-center bg-ink/10 backdrop-blur-[2px]" onClick={onClose}>
       <div
-        className="relative w-[380px] rounded-3xl bg-surface p-8 text-center shadow-2xl ring-1 ring-line"
+        className="relative w-[440px] rounded-3xl bg-surface p-8 text-center shadow-2xl ring-1 ring-line"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -53,6 +54,7 @@ export function WinModal({ level, win, next, onRetry, onClose }: Props) {
           +{win.points} points
           {win.bonus && <span className="rounded-full bg-amber px-2 py-0.5 text-xs text-white">daily ×2</span>}
         </div>
+        <ParRoute level={level} moves={win.moves} />
         {win.previousBest !== null && (
           <div className="mt-1 text-sm text-muted">
             Previous best: {golfResult(win.previousBest, level.par)} ({win.previousBest})
@@ -76,5 +78,38 @@ export function WinModal({ level, win, next, onRetry, onClose }: Props) {
         </div>
       </div>
     </div>
+  )
+}
+
+/** A dropdown comparing the player's commands with the basic par solution. */
+function ParRoute({ level, moves }: { level: Level; moves: string[] }) {
+  const par = hintCommands(level, level.solution.length)
+  const list = (cmds: string[]) => (
+    <ol className="space-y-1">
+      {cmds.map((c, i) => (
+        <li key={i} className="flex gap-2 font-mono text-[12px]">
+          <span className="w-4 shrink-0 text-right text-muted">{i + 1}</span>
+          <span className="break-all">{c}</span>
+        </li>
+      ))}
+    </ol>
+  )
+  return (
+    <details className="mt-5 rounded-2xl bg-paper text-left ring-1 ring-line">
+      <summary className="cursor-pointer px-4 py-2.5 text-sm font-semibold select-none">How par does it</summary>
+      <div className="grid grid-cols-2 gap-4 border-t border-line px-4 py-3">
+        <div>
+          <div className="mb-2 text-xs font-semibold tracking-wide text-muted uppercase">You · {moves.length}</div>
+          {list(moves)}
+        </div>
+        <div>
+          <div className="mb-2 text-xs font-semibold tracking-wide text-muted uppercase">Par · {par.length}</div>
+          {list(par)}
+        </div>
+      </div>
+      {moves.length < par.length && (
+        <p className="border-t border-line px-4 py-2.5 text-xs text-muted">You beat par with a shortcut. Nice.</p>
+      )}
+    </details>
   )
 }
