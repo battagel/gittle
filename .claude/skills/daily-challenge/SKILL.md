@@ -25,10 +25,13 @@ are in `docs/daily-challenges.md`. Read both before writing. This skill is the w
 - A daily is a normal level with `daily-date: YYYY-MM-DD` (regular levels have `daily-date: null`).
 - **Medium or pro only.** One per date (the player's local date): pick the first date from today with none
   (`grep -h daily-date levels/*.yaml | sort`) unless the user gives one. Alternate medium and pro by default.
-- File name: the next free number for its difficulty (`ls levels/M*`, `ls levels/P*`).
+- File name: the **next number at the end** of its difficulty (`ls levels/M*`, `ls levels/P*`, highest + 1).
+  Undated levels always come first and dated ones after, in date order; a new *undated* level goes before the dated
+  ones, which all move up one number.
+- Titles must be unique and never change once released: progress is saved under a key made from the title.
 - On its day it's featured at the top of the site and `#/play/daily`, worth **×2 points**, with **no hints**.
   Afterwards it joins the normal list under its difficulty. Future ones are hidden.
-- Never rename, delete or change the goal of a daily whose date has passed: progress is keyed by its id.
+- Never change the title, delete, or change the goal of a daily whose date has passed. (Its file number may change.)
 
 ## What makes each difficulty
 
