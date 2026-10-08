@@ -1,26 +1,25 @@
-title: Cherry on top
+title: Wrong branch
 difficulty: medium
-daily-date: 2026-10-07
-concepts: [cherry-pick]
+daily-date: null
+concepts: [branch -m, branch, reset]
 
 brief: |
-  `feature` has three commits. `main` wants the two fixes (`C2` and `C4`),
-  but not the experiment in between (`C3`).
+  Dan made the last two commits straight onto `main`, but they were meant for a new branch.
+  Matt wants it sorted out before anyone else builds on `main`.
 
-  Tip: `git cherry-pick` takes more than one commit.
+  Put Dan's commits on a branch called `feature` (and have it checked out),
+  and move `main` back to `C1`, where it was before.
 
 setup:
   - git commit
-  - git switch -c feature
-  - git commit -m "Fix date parsing"
-  - 'git commit -m "Experiment: new parser"'
-  - git commit -m "Fix timezone offset"
-  - git switch main
+  - git commit -m "Start feature"
+  - git commit -m "Finish feature"
 
 solution:
-  - git cherry-pick C2
-  - git cherry-pick C4
+  - git branch -m main feature
+  - git branch main C1
 
 goal:
-  - applied: { ref: main, changes: [C2, C4] }
-  - excludes: { ref: main, changes: [C3] }
+  - head: feature
+  - contains: { ref: feature, changes: [C2, C3] }
+  - points-to: { branch: main, commit: C1 }

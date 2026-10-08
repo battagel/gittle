@@ -1,27 +1,27 @@
-title: Fetch first
+title: Divergent main
 difficulty: medium
 daily-date: null
 origin: true
-concepts: [push, pull --rebase]
+concepts: [pull --no-rebase, merge]
 
 brief: |
-  You committed a footer fix on `main` (C3), but `git push` is rejected: Nikita pushed to `main` (C2)
-  since you last fetched.
+  You and Nikita both committed to `main`: yours (C3) is only on your laptop, and Nikita's (C2) is on origin.
+  This team records diverging work with a merge commit, and never rewrites `main`.
 
-  Get your commit onto origin's `main`. The team keeps `main` linear: no merge commits.
+  Bring Nikita's work into your `main` with a merge, and push the result.
 
 setup:
   - git commit -m "Initial app"
   - git push
-  - server: commit main -m "Fix typo in header"
-  - git commit -m "Fix footer links"
+  - server: commit main -m "Update dependencies"
+  - git commit -m "Add settings page"
 
 solution:
-  - git pull --rebase
+  - git pull --no-rebase
   - git push
 
 goal:
+  - merge-commit: origin:main
+  - merged: { from: C2, into: origin:main }
+  - merged: { from: C3, into: origin:main }
   - in-sync: main
-  - applied: { ref: origin:main, changes: [C2, C3] }
-  - linear: origin:main
-  - on-top-of: { ref: origin:main, base: C2 }

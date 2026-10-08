@@ -1,25 +1,35 @@
-title: Wrong branch
+title: Straighten it out
 difficulty: medium
 daily-date: null
-concepts: [branch -m, branch, reset]
+concepts: [rebase, merge commits]
 
 brief: |
-  Dan made the last two commits straight onto `main`, but they were meant for a new branch.
-  Matt wants it sorted out before anyone else builds on `main`.
+  Dan kept `feature` up to date by merging `main` into it, and now its history is a tangle.
+  Matt won't merge it like that.
 
-  Put Dan's commits on a branch called `feature` (and have it checked out),
-  and move `main` back to `C1`, where it was before.
+  Rewrite `feature` as a straight line of its own commits on top of the latest `main`,
+  with no merge commits, then point `main` at that same commit too.
 
 setup:
   - git commit
-  - git commit -m "Start feature"
-  - git commit -m "Finish feature"
+  - git switch -c feature
+  - git commit -m "Add charts"
+  - git switch main
+  - git commit -m "Fix typo"
+  - git switch feature
+  - git merge main
+  - git commit -m "Add chart legend"
+  - git switch main
+  - git commit -m "Bump version"
 
 solution:
-  - git branch -m main feature
-  - git branch main C1
+  - git switch feature
+  - git rebase main
+  - git switch main
+  - git merge feature
 
 goal:
-  - head: feature
-  - contains: { ref: feature, changes: [C2, C3] }
-  - points-to: { branch: main, commit: C1 }
+  - on-top-of: { ref: feature, base: C6 }
+  - contains: { ref: feature, changes: [C2, C5] }
+  - linear: feature
+  - same: [main, feature]

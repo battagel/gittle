@@ -1,31 +1,27 @@
-title: Hotfix everywhere
+title: Lost and found
 difficulty: medium
 daily-date: null
-concepts: [merge, fast-forward]
+concepts: [detached HEAD, sha]
 
 brief: |
-  Dan shipped a security bug. Nikita has already fixed it (`C3`) on `hotfix`, branched from `release`.
-  Meanwhile Dan's next feature (`C2`) landed on `main`, and it isn't ready to ship.
+  Dan made a great commit (`C2`) in *detached HEAD* state, switched back to `main`,
+  and now thinks it's lost.
 
-  Matt wants the fix everywhere. Merge `hotfix` into both `release` and `main`,
-  without rewriting `main`'s history and without shipping Dan's feature to `release`.
+  No branch points at it any more, so it's faded in the graph. But it isn't gone.
+  Give it a branch called `rescue`, and bring it into `main`.
+
+  Tip: click the faded commit to copy its sha.
 
 setup:
   - git commit
-  - git branch release
-  - git commit -m "New feature"
-  - git switch -c hotfix release
-  - git commit -m "Fix security bug"
-  - git switch release
+  - git checkout C1
+  - git commit -m "Experiment that worked"
+  - git switch main
 
 solution:
-  - git merge hotfix
-  - git switch main
-  - git merge hotfix
+  - git branch rescue C2
+  - git merge rescue
 
 goal:
-  - merged: { from: C3, into: release }
-  - merged: { from: C3, into: main }
-  - on-top-of: { ref: main, base: C2 }
-  - excludes: { ref: release, changes: [C2] }
-  - no-duplicates: main
+  - points-to: { branch: rescue, commit: C2 }
+  - merged: { from: C2, into: main }

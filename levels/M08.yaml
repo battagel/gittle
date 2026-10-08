@@ -1,35 +1,34 @@
-title: Straighten it out
+title: Stacked branches
 difficulty: medium
 daily-date: null
-concepts: [rebase, merge commits]
+concepts: [rebase, stacks]
 
 brief: |
-  Dan kept `feature` up to date by merging `main` into it, and now its history is a tangle.
-  Matt won't merge it like that.
+  Dan split a big change into two branches, `part2` built on top of `part1`,
+  then left them to go stale while `main` moved on.
 
-  Rewrite `feature` as a straight line of its own commits on top of the latest `main`,
-  with no merge commits, then point `main` at that same commit too.
+  Rebase so `part1` sits on the latest `main`, and `part2` still sits on top of `part1`.
+  Neither branch should contain the old copies.
 
 setup:
   - git commit
-  - git switch -c feature
-  - git commit -m "Add charts"
+  - git switch -c part1
+  - git commit -m "Add API client"
+  - git commit -m "Add API tests"
+  - git switch -c part2
+  - git commit -m "Use API in UI"
   - git switch main
-  - git commit -m "Fix typo"
-  - git switch feature
-  - git merge main
-  - git commit -m "Add chart legend"
-  - git switch main
-  - git commit -m "Bump version"
+  - git commit -m "Update CI"
 
 solution:
-  - git switch feature
+  - git switch part1
   - git rebase main
-  - git switch main
-  - git merge feature
+  - git switch part2
+  - git rebase part1
 
 goal:
-  - on-top-of: { ref: feature, base: C6 }
-  - contains: { ref: feature, changes: [C2, C5] }
-  - linear: feature
-  - same: [main, feature]
+  - on-top-of: { ref: part1, base: C5 }
+  - on-top-of: { ref: part2, base: part1 }
+  - contains: { ref: part2, changes: [C2, C3, C4] }
+  - excludes: { ref: part1, changes: [C4] }
+  - linear: part2

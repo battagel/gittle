@@ -1,27 +1,27 @@
-title: Lost and found
+title: Fetch first
 difficulty: medium
 daily-date: null
-concepts: [detached HEAD, sha]
+origin: true
+concepts: [push, pull --rebase]
 
 brief: |
-  Dan made a great commit (`C2`) in *detached HEAD* state, switched back to `main`,
-  and now thinks it's lost.
+  You committed a footer fix on `main` (C3), but `git push` is rejected: Nikita pushed to `main` (C2)
+  since you last fetched.
 
-  No branch points at it any more, so it's faded in the graph. But it isn't gone.
-  Give it a branch called `rescue`, and bring it into `main`.
-
-  Tip: click the faded commit to copy its sha.
+  Get your commit onto origin's `main`. The team keeps `main` linear: no merge commits.
 
 setup:
-  - git commit
-  - git checkout C1
-  - git commit -m "Experiment that worked"
-  - git switch main
+  - git commit -m "Initial app"
+  - git push
+  - server: commit main -m "Fix typo in header"
+  - git commit -m "Fix footer links"
 
 solution:
-  - git branch rescue C2
-  - git merge rescue
+  - git pull --rebase
+  - git push
 
 goal:
-  - points-to: { branch: rescue, commit: C2 }
-  - merged: { from: C2, into: main }
+  - in-sync: main
+  - applied: { ref: origin:main, changes: [C2, C3] }
+  - linear: origin:main
+  - on-top-of: { ref: origin:main, base: C2 }

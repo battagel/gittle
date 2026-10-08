@@ -1,34 +1,31 @@
-title: Stacked branches
+title: Hotfix everywhere
 difficulty: medium
 daily-date: null
-concepts: [rebase, stacks]
+concepts: [merge, fast-forward]
 
 brief: |
-  Dan split a big change into two branches, `part2` built on top of `part1`,
-  then left them to go stale while `main` moved on.
+  Dan shipped a security bug. Nikita has already fixed it (`C3`) on `hotfix`, branched from `release`.
+  Meanwhile Dan's next feature (`C2`) landed on `main`, and it isn't ready to ship.
 
-  Rebase so `part1` sits on the latest `main`, and `part2` still sits on top of `part1`.
-  Neither branch should contain the old copies.
+  Matt wants the fix everywhere. Merge `hotfix` into both `release` and `main`,
+  without rewriting `main`'s history and without shipping Dan's feature to `release`.
 
 setup:
   - git commit
-  - git switch -c part1
-  - git commit -m "Add API client"
-  - git commit -m "Add API tests"
-  - git switch -c part2
-  - git commit -m "Use API in UI"
-  - git switch main
-  - git commit -m "Update CI"
+  - git branch release
+  - git commit -m "New feature"
+  - git switch -c hotfix release
+  - git commit -m "Fix security bug"
+  - git switch release
 
 solution:
-  - git switch part1
-  - git rebase main
-  - git switch part2
-  - git rebase part1
+  - git merge hotfix
+  - git switch main
+  - git merge hotfix
 
 goal:
-  - on-top-of: { ref: part1, base: C5 }
-  - on-top-of: { ref: part2, base: part1 }
-  - contains: { ref: part2, changes: [C2, C3, C4] }
-  - excludes: { ref: part1, changes: [C4] }
-  - linear: part2
+  - merged: { from: C3, into: release }
+  - merged: { from: C3, into: main }
+  - on-top-of: { ref: main, base: C2 }
+  - excludes: { ref: release, changes: [C2] }
+  - no-duplicates: main

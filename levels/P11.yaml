@@ -1,39 +1,28 @@
-title: Lease, not force
+title: Too soon
 difficulty: pro
-daily-date: null
-origin: true
-concepts: [push --force-with-lease, fetch, cherry-pick]
+daily-date: 2026-10-08
+concepts: [rebase --onto, merge]
 
 brief: |
-  Dan rebased the shared `feature` branch onto the latest `main` (C4) and is about to force-push it.
-  What Dan hasn't seen: Nikita pushed a typo fix to `feature` on origin an hour ago (C5).
+  Dan merged the half-done `feature` into `main` too early (`C4`),
+  and Nikita's "Update docs" (`C5`) has landed on top of it. Nobody has pulled `main` yet,
+  so Matt wants the merge gone before anyone does.
 
-  Matt wants `feature` on origin rebased onto `main` as one straight line, *with* Nikita's fix.
-  Update it without losing anyone's work.
+  Get `feature`'s work out of `main`'s history, but keep everything else (`C1`, `C3` and `C5`).
 
 setup:
-  - git commit -m "Initial app"
-  - git push
+  - git commit
   - git switch -c feature
-  - git commit -m "Add search"
-  - git commit -m "Search filters"
-  - git push -u origin feature
+  - git commit -m "Half-done feature"
   - git switch main
-  - git commit -m "Security patch"
-  - git push
-  - git switch feature
-  - git rebase main
-  - server: commit feature -m "Fix typo in search"
+  - git commit -m "Fix login"
+  - git merge feature
+  - git commit -m "Update docs"
 
 solution:
-  - git fetch
+  - git reset --hard C3
   - git cherry-pick C5
-  - git push --force-with-lease
 
 goal:
-  - on-top-of: { ref: origin:feature, base: C4 }
-  - applied: { ref: origin:feature, changes: [C2, C3, C5] }
-  - linear: origin:feature
-  - no-duplicates: origin:feature
-  - in-sync: feature
-  - points-to: { ref: origin:main, commit: C4 }
+  - excludes: { ref: main, changes: [C2] }
+  - contains: { ref: main, changes: [C1, C3, C5] }

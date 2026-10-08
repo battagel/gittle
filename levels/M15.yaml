@@ -1,27 +1,26 @@
-title: Divergent main
+title: Cherry on top
 difficulty: medium
-daily-date: null
-origin: true
-concepts: [pull --no-rebase, merge]
+daily-date: 2026-10-07
+concepts: [cherry-pick]
 
 brief: |
-  You and Nikita both committed to `main`: yours (C3) is only on your laptop, and Nikita's (C2) is on origin.
-  This team records diverging work with a merge commit, and never rewrites `main`.
+  `feature` has three commits. `main` wants the two fixes (`C2` and `C4`),
+  but not the experiment in between (`C3`).
 
-  Bring Nikita's work into your `main` with a merge, and push the result.
+  Tip: `git cherry-pick` takes more than one commit.
 
 setup:
-  - git commit -m "Initial app"
-  - git push
-  - server: commit main -m "Update dependencies"
-  - git commit -m "Add settings page"
+  - git commit
+  - git switch -c feature
+  - git commit -m "Fix date parsing"
+  - 'git commit -m "Experiment: new parser"'
+  - git commit -m "Fix timezone offset"
+  - git switch main
 
 solution:
-  - git pull --no-rebase
-  - git push
+  - git cherry-pick C2
+  - git cherry-pick C4
 
 goal:
-  - merge-commit: origin:main
-  - merged: { from: C2, into: origin:main }
-  - merged: { from: C3, into: origin:main }
-  - in-sync: main
+  - applied: { ref: main, changes: [C2, C4] }
+  - excludes: { ref: main, changes: [C3] }

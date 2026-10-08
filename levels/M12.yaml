@@ -1,27 +1,36 @@
-title: Merge the stack
+title: One after another
 difficulty: medium
-daily-date: 2026-10-06
-concepts: [merge, stacks]
+daily-date: null
+origin: true
+concepts: [fetch, rebase, push --force-with-lease]
 
 brief: |
-  Nikita's work is a stack: `ui` is built on top of `api`. Matt has approved both.
+  Your `feature-1` was approved and merged into `main` on origin through a pull request (C6).
+  Your `feature-2` (C4, C5) was branched from `main` before that, and Matt wants it reviewed next.
 
-  Get both into `main` with a single merge commit.
+  The team rebases before review: put `feature-2` on top of the latest `main` from origin, and update it on origin.
 
 setup:
   - git commit -m "Initial app"
-  - git switch -c api
-  - git commit -m "Add API client"
-  - git switch -c ui
-  - git commit -m "Use API in UI"
-  - git switch main
-  - git commit -m "Update README"
+  - git push
+  - git switch -c feature-1
+  - git commit -m "Add login form"
+  - git commit -m "Login validation"
+  - git push -u origin feature-1
+  - git switch -c feature-2 main
+  - git commit -m "Add profile page"
+  - git commit -m "Profile avatar"
+  - git push -u origin feature-2
+  - server: merge feature-1 into main
 
 solution:
-  - git merge ui
+  - git fetch
+  - git rebase origin/main
+  - git push --force-with-lease
 
 goal:
-  - merged: { from: C2, into: main }
-  - merged: { from: C3, into: main }
-  - merge-commit: main
-  - on-top-of: { ref: main, base: C4 }
+  - on-top-of: { ref: origin:feature-2, base: C6 }
+  - contains: { ref: origin:feature-2, changes: [C4, C5] }
+  - ahead: { ref: origin:feature-2, of: C6, by: 2 }
+  - in-sync: feature-2
+  - points-to: { ref: origin:main, commit: C6 }
