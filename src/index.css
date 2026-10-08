@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* Design tokens (see docs/ui.md). The branch palette is mirrored in theme.ts for the graph renderer. */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-paper: #fbfaf7;
+  --color-surface: #ffffff;
+  --color-ink: #1f2328;
+  --color-muted: #8a8f98;
+  --color-line: #ebe8e1;
+
+  --color-coral: #ff6b6b;
+  --color-amber: #ffb020;
+  --color-lime: #9bd13a;
+  --color-mint: #34c9a0;
+  --color-teal: #14b8b8;
+  --color-sky: #3ba7f5;
+  --color-indigo: #5b6cf0;
+  --color-violet: #9b6cf0;
+}
+
+body {
+  @apply bg-paper text-ink font-sans antialiased;
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
