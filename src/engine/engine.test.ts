@@ -549,6 +549,11 @@ describe('inspection', () => {
     expect(label(step(s, 'git reset --hard HEAD@{2}'), 'HEAD')).toBe('C2')
   })
 
+  it('reflog messages show shas, even when a level setup typed labels', () => {
+    const s = run(play('git commit', 'git commit'), 'git reset --hard C1', { labels: true }).state
+    expect(run(s, 'git reflog').output[0].text).toMatch(new RegExp(`reset: moving to ${resolve(s, 'C1', { labels: true })}$`))
+  })
+
   it('merge-base finds where two lines split', () => {
     const s = play('git commit', 'git switch -c f', 'git commit', 'git switch main', 'git commit')
     expect(run(s, 'git merge-base main f').output[0].text).toBe(resolve(s, 'C1', { labels: true }))

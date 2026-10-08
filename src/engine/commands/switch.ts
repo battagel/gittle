@@ -20,7 +20,7 @@ export function attach(ctx: Ctx, name: string, created = false, record = true) {
 
 export function detach(ctx: Ctx, sha: string, record = true, target = sha) {
   if (record) ctx.state.previous = ctx.state.head
-  if (record) ctx.reason = `checkout: moving from ${headLabel(ctx.state)} to ${target}`
+  if (record) ctx.reason = `checkout: moving from ${headLabel(ctx.state)} to ${ctx.typed(target)}`
   moveHead(ctx, { type: 'detached', sha })
   ctx.info(`HEAD is now at ${sha}`)
   ctx.hint("You are in 'detached HEAD' state. To keep commits you make here, create a branch: git switch -c <name>")
@@ -51,7 +51,7 @@ export function switchCmd(ctx: Ctx, args: string[]) {
 
   const create = options.create ?? options['force-create']
   if (create) {
-    ctx.reason = `branch: Created from ${positional[0] ?? 'HEAD'}`
+    ctx.reason = `branch: Created from ${ctx.typed(positional[0] ?? 'HEAD')}`
     createBranch(ctx, create, resolve(s, positional[0] ?? 'HEAD', ctx.opts), 'force-create' in options)
     trackIfRemote(ctx, create, positional[0] ?? 'HEAD')
     attach(ctx, create, true)

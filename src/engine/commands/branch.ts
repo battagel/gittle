@@ -119,7 +119,7 @@ export function branch(ctx: Ctx, args: string[]) {
 
   if (positional.length > 2) fail('fatal: too many arguments')
   const [name, start = 'HEAD'] = positional
-  ctx.reason = s.branches[name] ? `branch: Reset to ${start}` : `branch: Created from ${start}`
+  ctx.reason = s.branches[name] ? `branch: Reset to ${ctx.typed(start)}` : `branch: Created from ${ctx.typed(start)}`
   createBranch(ctx, name, resolve(s, start, ctx.opts), flags.has('force'))
   trackIfRemote(ctx, name, start)
 }

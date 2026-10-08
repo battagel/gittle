@@ -17,6 +17,13 @@ export class Ctx {
     this.opts = opts
   }
 
+  /** A ref as typed, for reflog messages: level setups name commits by label (C3), players only ever see shas. */
+  typed(ref: string): string {
+    if (!this.opts.labels) return ref
+    const shaOf = new Map(Object.values(this.state.commits).map((c) => [c.label, c.sha]))
+    return ref.replace(/(?<![\w-])C\d+'*(?=$|[~^.@])/g, (label) => shaOf.get(label) ?? label)
+  }
+
   info(text: string) {
     this.output.push({ kind: 'info', text })
   }

@@ -15,7 +15,7 @@ export function checkout(ctx: Ctx, args: string[]) {
 
   const create = options.create ?? options['force-create']
   if (create) {
-    ctx.reason = `branch: Created from ${positional[0] ?? 'HEAD'}`
+    ctx.reason = `branch: Created from ${ctx.typed(positional[0] ?? 'HEAD')}`
     createBranch(ctx, create, resolve(s, positional[0] ?? 'HEAD', ctx.opts), 'force-create' in options)
     trackIfRemote(ctx, create, positional[0] ?? 'HEAD')
     attach(ctx, create, true)
