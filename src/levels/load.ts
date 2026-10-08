@@ -20,6 +20,7 @@ export interface Level {
   solution: string[]
   goal: Check[]
   origin: boolean // starts as a clone of a remote
+  bug: string | null // the change that breaks `npm test` (bisect levels)
   par: number
   start: RepoState // after setup
   target: RepoState // after setup + solution: what hints replay towards
@@ -84,7 +85,10 @@ export function parseLevel(path: string, source: string): Level {
     const goal = data.goal.map(parseCheck)
 
     if (data.origin !== undefined && typeof data.origin !== 'boolean') throw new Error('`origin` must be true or false')
-    const start = playAll(createRepo(id, { origin: data.origin === true }), setup, 'setup')
+    const bug = data.bug ?? null
+    if (bug !== null && (typeof bug !== 'string' || !/^C\d+$/.test(bug))) throw new Error('`bug` must be a commit label like C7')
+    const setupDone = playAll(createRepo(id, { origin: data.origin === true }), setup, 'setup')
+    const start = bug ? { ...setupDone, bug } : setupDone
     const target = playAll(start, solution, 'solution')
 
     // Catch typos: every ref must exist somewhere, and every change must exist in the start.
@@ -115,6 +119,7 @@ export function parseLevel(path: string, source: string): Level {
       solution,
       goal,
       origin: data.origin === true,
+      bug,
       par: solution.length,
       start,
       target,
