@@ -47,8 +47,9 @@ export function SimpleTerminal({ lines, prompt, onSubmit, typing = null, disable
     <div
       ref={scroller}
       className="h-full overflow-y-auto px-4 py-3 font-mono text-[13px] leading-relaxed [font-variant-ligatures:none]"
-      // only empty space focuses the input: clicks on output must stay free for selecting and copying
-      onClick={(e) => e.target === e.currentTarget && input.current?.focus()}
+      // only empty space focuses the input: clicks on output must stay free for selecting and copying. A drag across
+      // several lines also ends in a click here, and focusing the input would wipe the selection
+      onClick={(e) => e.target === e.currentTarget && !window.getSelection()?.toString() && input.current?.focus()}
     >
       {lines.map((line, i) => (
         <div key={i} className={`cursor-text whitespace-pre-wrap break-words select-text ${lineClass[line.kind]}`}>
