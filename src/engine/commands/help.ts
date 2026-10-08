@@ -4,7 +4,7 @@ import type { Ctx } from '../repo'
 export const usage: Record<string, string[]> = {
   commit: ['git commit [-m "<message>"]', 'Make a new commit on top of HEAD.'],
   branch: [
-    'git branch [<name> [<start>]]  |  git branch -d|-D <name>  |  git branch -f <name> <ref>',
+    'git branch [<name> [<start>]]  |  git branch -d|-D <name>  |  git branch -f <name> <ref>  |  git branch -m [<old>] <new>',
     'List, create, delete or move branches. A branch is just a label on a commit.',
   ],
   switch: [

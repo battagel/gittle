@@ -347,6 +347,10 @@ describe.runIf(import.meta.env.GITTLE_REALGIT)('engine matches real git', { time
       'git push',
       'server: rebase-merge f2 into main', // C6', C8'
       'git pull',
+      'git switch f2',
+      'git branch -m renamed', // origin keeps f2
+      'git push -u origin HEAD',
+      'git push origin --delete f2',
     ]
     for (const cmd of cmds) {
       state = step(real, state, cmd)

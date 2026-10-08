@@ -18,6 +18,7 @@ export function candidates(state: RepoState, level: Level): string[] {
   )
   const cmds = ['git commit']
   for (const b of branches) cmds.push(`git switch ${b}`, `git branch -D ${b}`, `git branch -d ${b}`)
+  for (const b of branches) for (const n of newNames) cmds.push(`git branch -m ${b} ${n}`)
   for (const a of branches) for (const b of branches) if (a < b) cmds.push(`git branch -d ${a} ${b}`, `git branch -D ${a} ${b}`)
   for (const t of Object.keys(state.tags)) cmds.push(`git tag -d ${t}`)
   for (const r of shas) {
@@ -38,6 +39,7 @@ export function candidates(state: RepoState, level: Level): string[] {
   if (state.origin) {
     cmds.push('git fetch', 'git pull', 'git pull --rebase', 'git pull --no-rebase', 'git push', 'git push --force-with-lease', 'git push --force')
     for (const b of branches) cmds.push(`git push -u origin ${b}`, `git push --force origin ${b}`)
+    cmds.push('git push -u origin HEAD')
     for (const b of Object.keys(state.origin.branches)) cmds.push(`git push origin --delete ${b}`)
   }
   for (const a of shas) {

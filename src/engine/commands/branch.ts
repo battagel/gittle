@@ -2,7 +2,7 @@ import { fail } from '../errors'
 import { isAncestor } from '../graph'
 import { parseArgs } from '../parse'
 import { resolve } from '../refs'
-import { type Ctx, createBranch, currentBranch, headSha, moveBranch } from '../repo'
+import { type Ctx, createBranch, currentBranch, headSha, moveBranch, moveHead } from '../repo'
 import { aheadBehind, setUpstream, trackIfRemote } from './remote'
 
 export function branch(ctx: Ctx, args: string[]) {
@@ -21,6 +21,9 @@ export function branch(ctx: Ctx, args: string[]) {
       '--remotes': 'remotes',
       '-a': 'all',
       '--all': 'all',
+      '-m': 'move',
+      '--move': 'move',
+      '-M': 'force-move',
     },
     options: { '-u': 'upstream', '--set-upstream-to': 'upstream' },
   })
@@ -41,6 +44,22 @@ export function branch(ctx: Ctx, args: string[]) {
       delete s.upstream[name]
       ctx.info(`Deleted branch ${name} (was ${tip}).`)
     }
+    return
+  }
+
+  if (flags.has('move') || flags.has('force-move')) {
+    // git branch -m [<old>] <new>: rename. Only your local branch: origin keeps the old name, and the branch
+    // keeps tracking its old upstream until you push it under the new name.
+    if (!positional.length || positional.length > 2) fail('fatal: branch name required')
+    const [old, name] = positional.length === 2 ? positional : [currentBranch(s) ?? fail('fatal: cannot rename the current branch while not on any'), positional[0]]
+    const tip = s.branches[old]
+    if (tip === undefined) fail(`error: refname refs/heads/${old} not found`, 'fatal: Branch rename failed')
+    if (old === name) return
+    createBranch(ctx, name, tip, flags.has('force-move'))
+    moveBranch(ctx, old, null)
+    if (s.upstream[old] !== undefined) s.upstream[name] = s.upstream[old]
+    delete s.upstream[old]
+    if (currentBranch(s) === old) moveHead(ctx, { type: 'branch', name })
     return
   }
 

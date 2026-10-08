@@ -124,14 +124,22 @@ export function push(ctx: Ctx, args: string[]) {
   let pairs: [string, string][]
   if (names.length) {
     pairs = names.map((n) => {
-      const [src, dst = src] = n.split(':')
-      return [src, dst]
+      const [given, dst] = n.split(':')
+      const src = given === 'HEAD' ? (currentBranch(s) ?? fail('fatal: You are not currently on a branch.')) : given
+      return [src, dst ?? src]
     })
   } else {
     const b = currentBranch(s)
     if (!b) fail('fatal: You are not currently on a branch.')
     const up = s.upstream[b]
     if (!up) fail(`fatal: The current branch ${b} has no upstream branch.`, `To push it and set the upstream: git push -u origin ${b}`)
+    if (up !== b) {
+      // git's default ("simple") push refuses when the names differ, e.g. after `git branch -m`
+      fail(
+        'fatal: The upstream branch of your current branch does not match the name of your current branch.',
+        `To push to the upstream branch: git push origin HEAD:${up}   To push to a branch of the same name: git push -u origin ${b}`,
+      )
+    }
     pairs = [[b, up]]
   }
 

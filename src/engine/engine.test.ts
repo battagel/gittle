@@ -511,6 +511,20 @@ describe('remotes', () => {
     expect(at(s, '@{u}')).toBe(at(s, 'origin/main'))
   })
 
+  it('branch -m renames locally only; plain push then refuses until you push the new name', () => {
+    const s = clone('git switch -c feature', 'git commit', 'git push -u origin feature', 'git branch -m login-page')
+    expect(s.head).toEqual({ type: 'branch', name: 'login-page' })
+    expect(s.branches.feature).toBeUndefined()
+    expect(s.upstream['login-page']).toBe('feature') // still tracks the old name
+    expect(s.origin!.branches.feature).toBeDefined() // origin still has it
+    expect(errorOf(s, 'git push')).toMatch(/does not match the name of your current branch/)
+    const pushed = step(step(s, 'git push -u origin HEAD'), 'git push origin --delete feature')
+    expect(pushed.origin!.branches['login-page']).toBe(headSha(pushed))
+    expect(pushed.origin!.branches.feature).toBeUndefined()
+    expect(pushed.upstream['login-page']).toBe('login-page')
+    expect(errorOf(clone('git branch x'), 'git branch -m x main')).toMatch(/already exists/)
+  })
+
   it('deleting a server branch, and pruning it', () => {
     const s = clone('git switch -c tmp', 'git push -u origin tmp', 'git push origin --delete tmp')
     expect(s.origin!.branches.tmp).toBeUndefined()

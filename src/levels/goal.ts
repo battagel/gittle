@@ -97,6 +97,7 @@ export function passes(level: GoalLevel, state: RepoState, check: Check): boolea
       return ref !== null && [...netChanges(state, ref).values()].every((n) => n <= 1)
     }
     case 'absent':
+      if (check.ref.startsWith('origin:')) return state.origin?.branches[check.ref.slice(7)] === undefined
       return state.branches[check.ref] === undefined && state.tags[check.ref] === undefined
     case 'pushed': {
       const sha = state.branches[check.ref]
