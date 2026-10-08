@@ -43,6 +43,7 @@ describe('level files', () => {
       for (const step of level.solution) {
         const r = run(state, step, { labels: true })
         if (!step.startsWith('git bisect ')) expect(r.changed, `"${step}" should change the repo`).toBe(true)
+        if (/^git bisect (good|bad|skip)/.test(step)) expect(state.bisected, `"${step}" comes after the bisect finished`).toBeNull()
         strokes += r.changed ? 1 : 0
         state = r.state
       }

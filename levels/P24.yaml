@@ -44,7 +44,6 @@ solution:
   - git bisect bad
   - git bisect good
   - git bisect good
-  - git bisect good
   - git bisect reset
   - git revert -m 1 C10
 
