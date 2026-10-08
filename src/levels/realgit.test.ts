@@ -429,7 +429,7 @@ describe.runIf(import.meta.env.GITTLE_REALGIT)('engine matches real git', { time
     go('git bisect reset')
   })
 
-  it.each(['C4', 'C7', 'C9', 'C12'])('bisect through merges matches (bug %s)', (bug) => {
+  it.each(['C1', 'C3', 'C4', 'C5', 'C6', 'C7', 'C9', 'C11', 'C12'])('bisect through merges matches (bug %s)', (bug) => {
     real = new RealRepo()
     let state: RepoState = { ...createRepo('bisect-merges'), bug }
     const go = (cmd: string) => {

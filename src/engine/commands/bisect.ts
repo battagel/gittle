@@ -93,15 +93,20 @@ function next(ctx: Ctx) {
       return
     }
   }
-  // the commit whose ancestry splits the candidates most evenly (ties: oldest, as git walks the reversed list)
+  // The commit whose ancestry splits the candidates most evenly, chosen the way git's find_bisection does: walking
+  // oldest first, the first merge that sits halfway, else the first single-parent commit that does (commits with no
+  // candidate parents never count as halfway), else the first with the best split.
   const n = candidates.length
-  const pick = [...testable].sort((x, y) => {
-    const w = (c: Sha) => {
-      const k = [...ancestors(s, c)].filter((a) => candidates.includes(a)).length
-      return Math.min(k, n - k)
-    }
-    return w(y) - w(x) || s.commits[x].seq - s.commits[y].seq
-  })[0]
+  const inRange = new Set(candidates)
+  const weight = (c: Sha) => [...ancestors(s, c)].filter((a) => inRange.has(a)).length
+  const parentsIn = (c: Sha) => s.commits[c].parents.filter((p) => inRange.has(p)).length
+  const halfway = (c: Sha) => Math.abs(2 * weight(c) - n) <= 1
+  const order = [...testable].sort((x, y) => s.commits[x].seq - s.commits[y].seq)
+  const split = (c: Sha) => Math.min(weight(c), n - weight(c))
+  const pick =
+    (b.skipped.length ? undefined : order.find((c) => parentsIn(c) > 1 && halfway(c))) ??
+    (b.skipped.length ? undefined : order.find((c) => parentsIn(c) === 1 && halfway(c))) ??
+    order.reduce((best, c) => (split(c) > split(best) ? c : best))
   const left = testable.length - 1
   const steps = Math.max(0, Math.ceil(Math.log2(left + 1)) - 1)
   ctx.reason = `checkout: moving from ${headLabel(s)} to ${pick}`
