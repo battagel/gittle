@@ -1,0 +1,59 @@
+title: Back out the feature
+difficulty: pro
+daily-date: 2026-10-29
+concepts: [bisect, revert -m, merge parents]
+bug: C7
+
+brief: |
+  Search results have been wrong since some point after `v4.0`, and `main` is shared. Every feature reaches
+  `main` through a merge commit.
+
+  Find the commit that broke it with `git bisect` (`npm test` checks the commit you're on). Then Matt
+  wants the *whole* feature that brought it backed out of `main`, not just the one commit, while everything
+  else stays. Finish the bisect so you're back on `main`.
+
+setup:
+  - git commit -m "Release 4.0"
+  - git tag -a v4.0 -m "Version 4.0"
+  - git switch -c reviews
+  - git commit -m "Add reviews"
+  - git commit -m "Review stars"
+  - git switch main
+  - git merge --no-ff reviews
+  - git commit -m "Update copyright year"
+  - git switch -c search-v2
+  - git commit -m "New search index"
+  - git commit -m "Search suggestions"
+  - git commit -m "Search filters"
+  - git switch main
+  - git commit -m "Faster images"
+  - git merge search-v2
+  - git switch -c wishlist
+  - git commit -m "Add wishlist"
+  - git switch main
+  - git merge --no-ff wishlist
+  - git commit -m "Fix footer links"
+  - git branch -d reviews
+  - git branch -d search-v2
+  - git branch -d wishlist
+
+solution:
+  - git bisect start
+  - git bisect bad
+  - git bisect good v4.0
+  - git bisect bad
+  - git bisect good
+  - git bisect good
+  - git bisect good
+  - git bisect reset
+  - git revert -m 1 C10
+
+goal:
+  - bisected: C7
+  - not-applied: { ref: main, changes: [C6, C7, C8] }
+    say: The whole feature that brought the bug is backed out of `main`
+  - applied: { ref: main, changes: [C2, C3, C5, C9, C11, C13] }
+    say: Everything else is still on `main`
+  - on-top-of: { ref: main, base: C13 }
+    say: "`main`'s history isn't rewritten"
+  - head: main

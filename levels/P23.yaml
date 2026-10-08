@@ -1,0 +1,73 @@
+title: Which release has it?
+difficulty: pro
+daily-date: 2026-10-27
+concepts: [tag --contains, describe, cherry-pick, tag]
+
+brief: |
+  Nikita fixed a security hole (cross-site scripting in comments) and shipped it in some, but not all,
+  of the supported release lines: `release/2.0`, `release/2.1` and `release/2.2`.
+
+  Matt wants every release line patched. On each line that lacks the fix, apply it, with nothing else from
+  `main`, and tag a new patch release with that line's next version number.
+
+  `git tag --contains <sha>` and `git branch --contains <sha>` list what already has a commit.
+  `git describe <branch>` names the newest release tag behind a commit.
+
+setup:
+  - git commit -m "Release 2.0"
+  - git tag -a v2.0 -m "Version 2.0"
+  - git branch release/2.0
+  - git commit -m "Add teams"
+  - git commit -m "Release 2.1"
+  - git tag -a v2.1 -m "Version 2.1"
+  - git branch release/2.1
+  - git commit -m "Add audit log"
+  - git commit -m "Release 2.2"
+  - git tag -a v2.2 -m "Version 2.2"
+  - git branch release/2.2
+  - git switch release/2.0
+  - git commit -m "Fix export bug"
+  - git tag -a v2.0.1 -m "Version 2.0.1"
+  - git commit -m "Fix timezone bug"
+  - git tag -a v2.0.2 -m "Version 2.0.2"
+  - git switch release/2.1
+  - git cherry-pick C6
+  - git tag -a v2.1.1 -m "Version 2.1.1"
+  - git switch -c xss-fix release/2.2
+  - git commit -m "Escape HTML in comments"
+  - git switch release/2.2
+  - git merge xss-fix
+  - git tag -a v2.2.1 -m "Version 2.2.1"
+  - git switch main
+  - git commit -m "Add reactions"
+  - git merge xss-fix
+  - git branch -d xss-fix
+
+solution:
+  - git switch release/2.0
+  - git cherry-pick C8
+  - git tag v2.0.3
+  - git switch release/2.1
+  - git cherry-pick C8
+  - git tag v2.1.2
+
+goal:
+  - all:
+      - applied: { ref: release/2.0, changes: [C8] }
+      - applied: { ref: release/2.1, changes: [C8] }
+      - applied: { ref: release/2.2, changes: [C8] }
+    say: The XSS fix is on every release line
+  - all:
+      - same: [release/2.0, tags/v2.0.3]
+      - same: [release/2.1, tags/v2.1.2]
+    say: Each line you patched has its next patch release tagged on the fix
+  - all:
+      - excludes: { ref: release/2.0, changes: [C2, C4, C9] }
+      - excludes: { ref: release/2.1, changes: [C4, C7, C9] }
+      - on-top-of: { ref: release/2.0, base: C7 }
+      - on-top-of: { ref: release/2.1, base: C6' }
+    say: Nothing but the fix reaches the release lines, and their history is kept
+  - all:
+      - unchanged: release/2.2
+      - unchanged: main
+    say: "`main` and anything already patched stay as they are"

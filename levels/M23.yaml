@@ -1,0 +1,36 @@
+title: Undo the fast-forward
+difficulty: medium
+daily-date: 2026-10-28
+concepts: [reflog, "main@{n}", fast-forward, reset, cherry-pick]
+
+brief: |
+  Dan merged `experiment` into `main` a sprint early. It was a fast-forward, so there's no merge commit
+  to revert: `main` simply jumped ahead. Dan then fixed a typo in the footer on top. Nothing is pushed yet.
+
+  Matt wants `main` exactly where it was before the merge, plus Dan's typo fix. `experiment` must stay as
+  it is. The graph is one straight line now; `git reflog show main` remembers where `main` used to be.
+
+setup:
+  - git commit -m "Add map view"
+  - git commit -m "Map markers"
+  - git switch -c experiment
+  - git commit -m "Map tiles cache"
+  - git commit -m "Offline tiles"
+  - git commit -m "Tile prefetching"
+  - git commit -m "Offline mode toggle"
+  - git switch main
+  - git merge experiment
+  - git commit -m "Fix typo in footer"
+
+solution:
+  - git reset --hard main@{2}
+  - git cherry-pick C7
+
+goal:
+  - excludes: { ref: main, changes: [C3, C4, C5, C6] }
+    say: None of `experiment`'s commits are on `main`
+  - ahead: { ref: main, of: C2, by: 1 }
+    say: "`main` is where it was before the merge, plus one commit"
+  - applied: { ref: main, changes: [C7] }
+    say: Dan's typo fix is on `main`
+  - unchanged: experiment

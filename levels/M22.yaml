@@ -1,0 +1,34 @@
+title: Protected main
+difficulty: medium
+daily-date: 2026-10-26
+concepts: [protected branches, revert, pull --rebase, log --grep]
+origin: true
+
+brief: |
+  Dan pushed a commit to `main` that logs customers' card numbers "for debugging", and Nikita has pushed
+  more work on top since. You have an unpushed commit of your own.
+
+  Matt wants the logging gone from origin. Rewriting history won't work: `main` on origin is *protected*, so
+  force-pushes are rejected and history there only moves forward. `git log --grep <text>` searches commit
+  messages.
+
+setup:
+  - git commit -m "Add invoices"
+  - git push
+  - server: protect main
+  - server: commit main -m "Log card numbers for debugging"
+  - server: commit main -m "Card form validation"
+  - server: commit main -m "Fix invoice totals"
+  - git commit -m "Invoice emails"
+
+solution:
+  - git pull --rebase
+  - git revert C2
+  - git push
+
+goal:
+  - not-applied: { ref: "origin:main", changes: [C2] }
+    say: Dan's card logging is undone on origin
+  - applied: { ref: "origin:main", changes: [C0, C1, C3, C4, C5] }
+    say: Everyone else's work, and your invoice emails, are on origin
+  - in-sync: main
