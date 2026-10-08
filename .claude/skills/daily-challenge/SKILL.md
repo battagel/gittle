@@ -53,7 +53,8 @@ Their roles are context, not text:
   repo (a fix, notes, a reviewed commit) and must survive. If the story doesn't need that, leave Nikita out.
 - **Talk to the player directly**: "Put the fix on `release/2.1`…", "Get `feature` onto…". Never "Help Nikita…",
   and never make the player Nikita's helper.
-- Easy levels follow "you" (the player's first week on the team) and don't need the cast.
+- E01 introduces the cast with their roles, once. Everywhere else, first names only.
+- Easy levels follow "you" (the player's first weeks on the team) and don't need the cast.
 
 ## Remotes
 

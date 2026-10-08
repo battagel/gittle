@@ -5,7 +5,7 @@ origin: true
 concepts: [pull, fetch]
 
 brief: |
-  Overnight, Nikita pushed two commits to `main` on origin. Your laptop doesn't know yet: the graph only
+  Overnight, Nikita pushed two commits to `main` on origin. Your local `main` doesn't know yet: the graph only
   shows what you've fetched, and the strip above it tells you what's new on origin.
 
   Bring your `main` up to date with origin's.
