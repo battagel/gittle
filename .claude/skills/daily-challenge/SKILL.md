@@ -12,13 +12,17 @@ are in `docs/daily-challenges.md`. Read both before writing. This skill is the w
 
 - One YAML file in the flat `levels/` folder, named by id: `E01…` easy, `M01…` medium, `P01…` pro. The letter must
   match `difficulty`; the number is its place in the list. Fields: `title`, `difficulty`, `daily-date`, `concepts`,
-  `brief`, `setup`, `solution`, `goal`. The UI shows it as "P07 · Mixed-up commits".
+  `brief`, `setup`, `solution`, `goal`, and optionally `origin: true` (remotes) and `bug: C7` (bisect levels). The UI shows it as "P07 · Mixed-up commits".
 - `setup` and `solution` are git commands. Commits are referred to by label: `C0` exists at the start, every new commit
   (including merges and reverts) takes the next number, and copies get primes (`C3'`). Merges carry no change; a
   reverted merge carries several.
 - `goal` is a list of checks (`docs/levels.md#goals`). The player wins when all pass. Goals say what the brief asks,
   plus guards so cheats can't win (e.g. `unchanged: main`, `applied: [...]` for work that must survive,
   `tags/v1.0` / `heads/main` to insist on a tag or branch, `no-duplicates`).
+- **The checklist is live and must not give the answer away.** If a check's default wording names the commit to find,
+  the branch that's missing something or the tag name to work out, give it a `say:` ("`main` is back where it was
+  before Dan's first reset"). Group guards with `all:` (one line, one `say:`) so the list can't reveal the answer by
+  what it leaves out, e.g. `unchanged` on every branch *except* the one to fix.
 
 ## Dailies
 
@@ -29,19 +33,22 @@ are in `docs/daily-challenges.md`. Read both before writing. This skill is the w
   Undated levels always come first and dated ones after, in date order; a new *undated* level goes before the dated
   ones, which all move up one number.
 - Titles must be unique and never change once released: progress is saved under a key made from the title.
-- On its day it's featured at the top of the site and `#/play/daily`, worth **×2 points**, with **no hints**.
+- On its day it's featured at the top of the site and `#/play/daily`, worth **2x points**, with **no hints**.
   Afterwards it joins the normal list under its difficulty. Future ones are hidden.
 - Never change the title, delete, or change the goal of a daily whose date has passed. (Its file number may change.)
 
 ## What makes each difficulty
 
 - **Easy** (regular levels only): one new idea, told as part of the player's own first week on the team
-  ("you"): first commit, first branch, HEAD, switching, fast-forward, tags. Par 1–3.
+  ("you"): first commit, first branch, HEAD, switching, fast-forward, tags, pushing and pulling, and reading the
+  history (log, merge-base, `--contains`, reflog, a guided bisect). Par 1–4.
 - **Medium**: moving work around with one or two everyday tools: merge, rebase, cherry-pick, reset, revert, tags,
-  deleting branches, detached HEAD. Recognisable situations; par 1–4 in basic commands.
+  deleting branches, detached HEAD, reflog rescues, protected branches. Recognisable situations; par 1–4 in basic
+  commands.
 - **Pro**: real industry problems people hit at work: reverted merges and reverting the revert, merges into the wrong
   branch, wrong bases, secrets mid-branch, backports to release lines, rewritten or force-pushed shared branches,
-  stale force-pushes (leases), hotfixes from tags. Usually needs a real insight (`revert -m`, `rebase --onto`, ranges, which merge parent) or several
+  stale force-pushes (leases), hotfixes from tags, finding a regression and backing it out, working out which
+  releases lack a fix. Usually needs a real insight (`revert -m`, `rebase --onto`, ranges, which merge parent) or several
   coordinated steps. Not just "one rebase".
 
 ## The cast
@@ -66,6 +73,24 @@ recovering from a force-push, pull-request merges. "`main` is shared, so revert 
 those local (a trailing `git push` adds nothing). Remote levels use `server:` setup lines for what teammates did
 (`docs/levels.md` and `docs/remotes.md`), and goals that check `origin:<branch>` / `in-sync` / `pushed`.
 
+## Inspection levels (log, reflog, merge-base, --contains, describe, bisect)
+
+Inspection commands are free and leave no trace, so **turn the answer into an action** the goal can check: tag the
+merge base, reset to where `main` was, merge the fix into the branch that lacks it, revert the culprit. Combining
+tools makes good dailies (bisect then `revert -m`; `--contains` + `describe` then backport and tag).
+
+- **Reflog**: labels give away creation order (C4 is older than C6), so ask about *moves*, not commits: at least two
+  plausible faded candidates (e.g. a deleted branch's commits next to the ones a reset abandoned, or a later commit
+  with the same message), or a branch that slid along an unbroken line (a fast-forward) where nothing marks where it
+  was. Use the solution form a player would type, `git reset --hard main@{5}`; setup labels show as shas in the reflog.
+- **Bisect**: set `bug: C7` (the change that breaks `npm test`), keep the messages neutral, and include
+  `bisected: C7` in the goal so the bisect itself is part of the win, plus `head: main` if the player should finish
+  with `git bisect reset`. Write the solution as a player would (`git bisect start`, `bad`, `good v1.0`, then each
+  mark), and find the marks by running the engine: it picks midpoints exactly like git. No marks after the culprit is
+  named (a test checks).
+- **Protected branches** (remote levels): `- server: protect main` makes origin reject force-pushes and deletes, so
+  history there only moves forward.
+
 ## Before you write: check for similar scenarios
 
 Read the titles, briefs and solutions of **all** existing levels (`levels/*.yaml`, or the table in `docs/levels.md`)
@@ -75,13 +100,14 @@ the same puzzle with different names is not.
 
 ## Par, under par and points
 
-- **Par = the shortest solution in basic commands**: one action per command. Write `solution` that way. Not basic
+- **Par = the strokes the shortest basic solution takes**: one action per command. Write `solution` that way.
+  Inspection is free; in bisect levels `git bisect start` and the final mark are free too, every other mark is a stroke. Not basic
   (and so the way strong players beat par): `switch -c`/`checkout -b`, `rebase <upstream> <branch>`,
   `rebase --onto`, several commits or a range in `cherry-pick`/`revert`, `branch -f`, deleting several branches at
-  once, `pull` with an explicit branch (`pull --rebase origin main`). `revert -m 1 <merge>`, `fetch`, `pull`,
+  once, `pull` with an explicit branch (`pull --rebase origin main`), `git bisect run npm test`. `revert -m 1 <merge>`, `fetch`, `pull`,
   `pull --rebase` and every `push` form *are* basic.
 - Points: par 100; **+25 per stroke under par** (birdie 125, eagle 150, albatross 175, condor 200); 30% less per
-  stroke over par (70, 49, 34…), never below 10. Dailies ×2 on their day.
+  stroke over par (70, 49, 34…), never below 10. Dailies 2x on their day.
 - A good pro often has a shortcut that beats the basic par (e.g. `rebase --onto` for reset + cherry-picks).
   That's intended: the audit should show it as a Birdie/Eagle.
 
@@ -97,7 +123,8 @@ the same puzzle with different names is not.
    - `npm run levels:audit -- -t <id>`: every way to win in par strokes or fewer with *any* command. Read every
      route. Under-par routes must be genuine shortcuts; anything that wins while breaking something else (deleting
      `main`, undoing other work, borrowing the wrong commit) means the goal needs a guard. The search covers about
-     3 strokes; for longer levels, think through shortcuts by hand.
+     3 strokes; for longer levels, think through shortcuts by hand. Bisect levels are skipped (the search would know
+     where the bug is): think them through by hand too.
    - `npm run levels:realgit -- -t <id>`: setup and solution give the same result in real git.
 4. **Update the level table** in `docs/levels.md` (Level set).
 5. **Report** the date, difficulty, id and title, brief, par, the shortcuts that beat par, and anything you were
