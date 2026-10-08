@@ -12,7 +12,9 @@ brief: |
   commit by binary search:
 
   1. `git bisect start`, then `git bisect bad` (the commit you're on is broken) and `git bisect good v1.0`.
+
   2. Git checks out a commit halfway between. Run `npm test`, then mark it `git bisect good` or `git bisect bad`.
+
   3. Repeat until git names the first bad commit, then `git bisect reset` to go back to `main`.
 
   Each checkout moves HEAD, so it costs a stroke.
