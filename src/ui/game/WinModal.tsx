@@ -52,7 +52,7 @@ export function WinModal({ level, win, next, onRetry, onClose }: Props) {
         </div>
         <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-paper px-4 py-1.5 font-bold ring-1 ring-line">
           +{win.points} points
-          {win.bonus && <span className="rounded-full bg-amber px-2 py-0.5 text-xs text-white">daily ×2</span>}
+          {win.bonus && <span className="rounded-full bg-amber px-2 py-0.5 text-xs text-white">daily 2x</span>}
         </div>
         <ParRoute level={level} moves={win.moves} />
         {win.previousBest !== null && (
