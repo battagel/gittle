@@ -37,8 +37,9 @@ export function Landing() {
   const first = getLevel('E01')
 
   return (
-    <div className="mx-auto max-w-7xl px-10">
+    <>
       <TopBar />
+      <div className="mx-auto max-w-7xl px-10">
 
       <main>
         <section className="grid min-h-[620px] grid-cols-[1fr_1.618fr] items-center gap-16">
@@ -155,8 +156,9 @@ export function Landing() {
         </section>
       </main>
 
+      </div>
       <Footer />
-    </div>
+    </>
   )
 }
 

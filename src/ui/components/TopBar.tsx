@@ -5,10 +5,13 @@ import { load } from '../../storage'
 import { ScoreBadge } from './ScoreBadge'
 import { Wordmark } from './Wordmark'
 
-/** Site header: wordmark, navigation, score, and the (future) sign-in. */
+/** The width the top bar (and footer) always use, so they don't jump between pages. */
+export const CHROME_WIDTH = 'mx-auto w-full max-w-7xl px-10'
+
+/** Site header: wordmark, navigation, score, and the (future) sign-in. Same width on every page. */
 export function TopBar() {
   return (
-    <header className="flex items-center justify-between py-6">
+    <header className={`${CHROME_WIDTH} flex items-center justify-between py-6`}>
       <Link to="/">
         <Wordmark />
       </Link>

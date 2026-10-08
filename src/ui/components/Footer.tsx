@@ -1,10 +1,11 @@
 import { Link } from 'react-router'
+import { CHROME_WIDTH } from './TopBar'
 import { dailyToday } from '../../levels/load'
 import { Wordmark } from './Wordmark'
 
 export function Footer() {
   return (
-    <footer className="mt-24 border-t border-line py-12 text-sm text-muted">
+    <footer className={`${CHROME_WIDTH} mt-24 border-t border-line py-12 text-sm text-muted`}>
       <div className="grid grid-cols-[2fr_1fr_1fr] gap-10">
         <div>
           <Wordmark />

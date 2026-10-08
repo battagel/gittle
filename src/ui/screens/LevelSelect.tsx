@@ -63,8 +63,9 @@ export function LevelSelect() {
   const solved = levels.filter((l) => best(l) !== undefined).length
 
   return (
-    <div className="mx-auto max-w-5xl px-6">
+    <>
       <TopBar />
+      <div className="mx-auto max-w-5xl px-6">
       <main className="pt-4">
       <div className="mb-8 flex items-baseline justify-between">
         <h1 onClick={titleClick} className="text-3xl font-bold tracking-tight select-none">
@@ -138,8 +139,9 @@ export function LevelSelect() {
       })}
       {!shown.length && <p className="py-10 text-center text-muted">No levels match these filters.</p>}
       </main>
+      </div>
       <Footer />
-    </div>
+    </>
   )
 }
 
