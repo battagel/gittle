@@ -4,8 +4,11 @@ daily-date: null
 concepts: [branch, switch]
 
 brief: |
-  Matt has given you your first feature. Everyone shares `main`, so new work happens on a
-  *branch*: just another label pointing at a commit.
+  Matt has given you your first feature. Everyone shares `main`, so new work happens on a separate *branch*.
+
+  A branch is just a label pointing at a commit. Creating one copies nothing and costs nothing, and whenever you
+  commit, the branch you're on moves forward to the new commit while every other branch stays put.
+  That's what keeps your unfinished work away from everyone else's.
 
   Create a branch called `feature`, switch to it, and make a commit there.
 

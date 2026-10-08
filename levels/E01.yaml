@@ -4,14 +4,18 @@ daily-date: null
 concepts: [commit]
 
 brief: |
-  Welcome to the team! Matt has given you access to the project. Everything lives in a
-  *repository*, and `main` is a label pointing at its latest commit.
+  Welcome to the team! You'll be working with **Matt**, who runs the team, **Nikita**, the senior engineer
+  who usually knows the right move, and **Dan**, who is keen and quick, and sometimes a little too quick.
 
-  A *commit* is one unit of work: a single change, saved with a pointer to the commit before it.
-  Every commit gets its own *sha*, a unique id like `40a83d2` (the commit already there), shown inside each circle in the graph.
+  The team's code lives in a *repository*, and **git** keeps its whole history: every change anyone has made,
+  and in what order. You'll never see a file here, only that history.
+
+  A *commit* is one unit of work: a single change, saved with a pointer to the commit before it. Every commit
+  gets its own *sha*, a unique id like `40a83d2` (the commit already there), shown inside each circle in the graph.
   Commits never change: new work always means a new commit with a new sha.
 
-  Your first task: make a commit. Watch it appear with a fresh sha, and `main` move onto it.
+  `main` is a *branch*: a label pointing at the latest commit. Your first task: make a commit. Watch it appear
+  with a fresh sha, and `main` move onto it.
 
   Tip: `git log --oneline` lists commits with their shas. Looking around is free: only commands that
   change something cost a stroke.
